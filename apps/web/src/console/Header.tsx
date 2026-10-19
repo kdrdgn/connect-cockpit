@@ -38,9 +38,8 @@ export function HeaderRow({
       <SortHeader field="event" {...p}>Event</SortHeader>
       <SortHeader field="date" {...p}>Date</SortHeader>
       <SortHeader field="section" {...p}>
-        <abbr title="Section">Sec</abbr>
+        <abbr title="Section / row">Sec / Row</abbr>
       </SortHeader>
-      <th scope="col">Row</th>
       <SortHeader field="quantity" numeric {...p}>
         <abbr title="Quantity">Qty</abbr>
       </SortHeader>

@@ -1,12 +1,18 @@
-import { type PriceBand, priceHealth } from "@cockpit/contract";
+import { FAR_FROM_MARKET_BPS, type PriceBand, priceGapBps, priceHealth } from "@cockpit/contract";
+
+/**
+ * How loud the gap is, by distance from market: muted at market, ink above or below, attention when over- or
+ * underpriced, strong beyond the suggestion clamp. Strong is told apart by a doubled glyph as well as colour.
+ */
+export type GapTier = "muted" | "ink" | "attention" | "strong";
 
 export type GapDisplay = {
   band: PriceBand;
   /** "+31%", "−9%", "0%". Uses a real minus sign so columns of figures line up. */
   text: string;
   direction: "up" | "down" | "flat";
-  attention: boolean;
-  /** Words for assistive tech: "31% above market, overpriced". */
+  tier: GapTier;
+  /** Words for assistive tech: "31% above market, overpriced", "42% above market, overpriced, far from market". */
   label: string;
 };
 
@@ -26,12 +32,18 @@ export function gapDisplay(price: number, marketPrice: number): GapDisplay {
   const capped = Math.abs(gapPercent) > 999 ? "+" : "";
   const text = gapPercent > 0 ? `+${shown}%${capped}` : gapPercent < 0 ? `−${shown}%${capped}` : "0%";
   const where = gapPercent === 0 ? "at market" : `${Math.abs(gapPercent)}% ${gapPercent > 0 ? "above" : "below"} market`;
+  const far = Math.abs(priceGapBps(price, marketPrice)) > FAR_FROM_MARKET_BPS;
+  const tier: GapTier =
+    band === "at_market" ? "muted" : band === "above" || band === "below" ? "ink" : far ? "strong" : "attention";
   return {
     band,
     text,
     direction,
-    attention: band === "overpriced" || band === "underpriced",
-    label: band === "at_market" || band === "above" || band === "below" ? where : `${where}, ${BAND_WORDS[band]}`,
+    tier,
+    label:
+      tier === "muted" || tier === "ink"
+        ? where
+        : `${where}, ${BAND_WORDS[band]}${tier === "strong" ? ", far from market" : ""}`,
   };
 }
 

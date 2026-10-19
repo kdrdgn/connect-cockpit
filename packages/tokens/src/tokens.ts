@@ -32,7 +32,8 @@ export const motion = { fast: 120, base: 200 } as const;
 
 /**
  * Colour roles. There is deliberately no green: healthy is ink, so the few coloured marks are the work queue.
- * attention = errors, overpriced, stale pending. danger = rollback flash only. accent = focus and selection.
+ * attention = errors, overpriced, stale pending. attentionStrong = a price gap beyond ±30% only, an orange kept clear of
+ * red. danger = rollback flash only. accent = focus and selection.
  */
 export const color = {
   light: {
@@ -48,6 +49,7 @@ export const color = {
     accentBg: "#E8EEFA",
     attention: "#8F5200",
     attentionBg: "#FCF1DE",
+    attentionStrong: "#A8400A",
     danger: "#B3261E",
     dangerBg: "#FCEBE9",
   },
@@ -65,6 +67,7 @@ export const color = {
     accentBg: "#1C2A47",
     attention: "#F0B45A",
     attentionBg: "#3A2A12",
+    attentionStrong: "#FF9A66",
     danger: "#F2867D",
     dangerBg: "#3D1C1A",
   },

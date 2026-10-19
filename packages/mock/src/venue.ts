@@ -1,4 +1,5 @@
-// Fictional venue, hand-authored. Section ids are the values used in Listing.section.
+// Fictional seating layout, hand-authored and shared by every venue in the data. Section ids are the values used in
+// Listing.section, so a section filter means the same seats at every venue.
 export type Point = readonly [x: number, y: number];
 
 export type VenueSection = {
@@ -8,7 +9,7 @@ export type VenueSection = {
   points: readonly Point[];
 };
 
-export type Venue = {
+export type VenueLayout = {
   name: string;
   viewBox: string;
   stage: readonly Point[];
@@ -22,8 +23,8 @@ const rect = (x1: number, y1: number, x2: number, y2: number): Point[] => [
   [x1, y2],
 ];
 
-export const VENUE: Venue = {
-  name: "Harbour Arena",
+export const LAYOUT: VenueLayout = {
+  name: "Arena layout",
   viewBox: "0 0 800 460",
   stage: rect(300, 20, 500, 70),
   sections: [
@@ -58,4 +59,7 @@ export const VENUE: Venue = {
   ],
 };
 
-export const SECTION_IDS = VENUE.sections.map((s) => s.id);
+// Fictional venue names. Events are spread across them; all use LAYOUT.
+export const VENUES = ["Harbour Arena", "Northgate Hall", "Riverside Dome", "Elm Park Pavilion", "Castlebrook Arena"] as const;
+
+export const SECTION_IDS = LAYOUT.sections.map((s) => s.id);

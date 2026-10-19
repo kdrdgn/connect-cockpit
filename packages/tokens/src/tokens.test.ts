@@ -4,7 +4,7 @@ import { toCssVars } from "./css";
 import { type ColorRole, color } from "./tokens";
 
 const light = color.light;
-const TEXT_ROLES: ColorRole[] = ["ink", "inkMuted", "inkSubtle", "accent", "attention", "danger"];
+const TEXT_ROLES: ColorRole[] = ["ink", "inkMuted", "inkSubtle", "accent", "attention", "attentionStrong", "danger"];
 const SURFACES: ColorRole[] = ["bg", "surface", "surfaceRaised"];
 // Status text also sits on its own tint.
 const TINTED: [ColorRole, ColorRole][] = [
@@ -13,6 +13,8 @@ const TINTED: [ColorRole, ColorRole][] = [
   ["danger", "dangerBg"],
   ["ink", "accentBg"],
   ["ink", "attentionBg"],
+  // A far-off price gap on a selected row.
+  ["attentionStrong", "accentBg"],
 ];
 
 describe("design tokens", () => {
@@ -46,6 +48,21 @@ describe("design tokens", () => {
 
   it.each(TINTED)("light %s on %s meets AA (4.5:1)", (fg, bg) => {
     expect(contrastRatio(light[fg], light[bg])).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("exposes attention-strong as a CSS variable", () => {
+    expect(toCssVars()).toContain("--color-attention-strong: #A8400A;");
+  });
+
+  it("keeps red for rollback: attention-strong is an orange, danger the only red", () => {
+    for (const palette of [color.light, color.dark]) {
+      expect(hueSaturation(palette.attentionStrong).hue).toBeGreaterThanOrEqual(15);
+      const reds = Object.entries(palette).filter(([, v]) => {
+        const { hue, saturation } = hueSaturation(v);
+        return saturation > 0.25 && (hue < 15 || hue > 345);
+      });
+      expect(reds.map(([role]) => role).filter((r) => !r.startsWith("danger"))).toEqual([]);
+    }
   });
 
   it("zeroes motion under prefers-reduced-motion", () => {

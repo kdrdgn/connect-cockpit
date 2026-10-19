@@ -90,14 +90,69 @@
   height: 100%;
 }
 
-.event {
-  font-weight: var(--weight-medium);
+/* Event over venue in comfortable (20 + 16 inside the 40px row); one line in compact, venue truncated first. */
+.eventStack {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.eventName,
+.venue {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eventName {
+  color: var(--color-ink);
+  font-weight: var(--weight-semibold);
+}
+
+.venue {
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs-size);
+  line-height: var(--text-xs-line);
+}
+
+.venueDot {
+  display: none;
+}
+
+:global([data-density="compact"]) .eventStack {
+  flex-direction: row;
+  align-items: baseline;
+}
+
+:global([data-density="compact"]) .eventName {
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+
+:global([data-density="compact"]) .venueDot {
+  display: inline;
+  flex: none;
+  white-space: pre;
+  color: var(--color-ink-muted);
+}
+
+:global([data-density="compact"]) .venue {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 /* Same event and date as the row above: muted, so each new event stands out when scanning down. */
-.repeat {
+.repeat .eventName,
+.repeat .venue,
+.repeat .venueDot {
   color: var(--color-ink-subtle);
   font-weight: var(--weight-regular);
+}
+
+/* The figure the broker acts on: the heaviest number in the row. */
+.price {
+  color: var(--color-ink);
+  font-weight: var(--weight-semibold);
 }
 
 .muted {

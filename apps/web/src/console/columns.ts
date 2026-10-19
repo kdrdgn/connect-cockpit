@@ -6,15 +6,15 @@ export type InteractiveCol = (typeof INTERACTIVE_COLS)[number];
 export const colIndex = (c: InteractiveCol) => INTERACTIVE_COLS.indexOf(c);
 
 export type Column =
-  | { key: "select" | "event" | "date" | "section" | "row" | "quantity" | "price" | "gap"; width?: number; sort?: SortField }
+  | { key: "select" | "event" | "date" | "seats" | "quantity" | "price" | "gap"; width?: number; sort?: SortField }
   | { key: Marketplace; width: number };
 
 export const COLUMNS: readonly Column[] = [
   { key: "select", width: 36 },
   { key: "event", sort: "event" },
-  { key: "date", width: 104, sort: "date" },
-  { key: "section", width: 60, sort: "section" },
-  { key: "row", width: 48 },
+  { key: "date", width: 76, sort: "date" },
+  // "112 / F": section and row read as one seat reference; sorting is by section.
+  { key: "seats", width: 88, sort: "section" },
   { key: "quantity", width: 60, sort: "quantity" },
   { key: "price", width: 88, sort: "price" },
   { key: "gap", width: 76 },

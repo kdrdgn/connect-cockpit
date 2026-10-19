@@ -18,11 +18,15 @@ The app SHALL open on a feed of every listing with a problem, plus listings with
 - **THEN** it does not appear in the feed
 
 ### Requirement: Rows say what is wrong in words
-Each row SHALL show the event, date, section and row, and its most urgent issue in words with the marketplace named, for example "StubHub: shows 4, you have 2" or "SeatGeek: error". Status SHALL NOT rely on colour alone. Ordinary pending rows SHALL look quieter than problem rows.
+Each row SHALL show the event in strong weight, the venue under it in muted text, the date as day and short month ("30 Oct"), section and row as "section / row" ("112 / F"), and its most urgent issue in words with the marketplace named, for example "StubHub: shows 4, you have 2" or "SeatGeek: error". Status SHALL NOT rely on colour alone. Ordinary pending rows SHALL look quieter than problem rows.
 
 #### Scenario: Quantity mismatch row
 - **WHEN** StubHub lists 4 tickets and the broker holds 2
 - **THEN** the row reads "StubHub: shows 4, you have 2" with a warning shape next to it
+
+#### Scenario: Row layout
+- **WHEN** a listing for "Glass Harbour – Tidal Tour" at Harbour Arena on 30 October, section 112 row F, is in the feed
+- **THEN** its row shows "Glass Harbour – Tidal Tour", then "Harbour Arena", then "30 Oct · 112 / F"
 
 ### Requirement: One-tap retry from the feed
 A row whose most urgent issue is on a marketplace that can be retried (error, stale pending or quantity mismatch) SHALL have a Retry button. Tapping it SHALL retry that marketplace immediately, with no confirmation, and show it as pending. A failed retry SHALL roll back and say why on that row.
@@ -89,11 +93,11 @@ The feed SHALL show a loading state until the first listings arrive, "Nothing ne
 - **THEN** the feed says "Nothing needs you right now"
 
 ### Requirement: Touch targets and accessibility
-Every tappable control SHALL be at least 44 by 44 points. The feed and detail SHALL be usable at 390 points wide with no horizontal scrolling. Every control SHALL have an accessible name and role, and each row SHALL be announced as one item with its issue in words.
+Every tappable control SHALL be at least 44 by 44 points. The feed and detail SHALL be usable at 390 points wide with no horizontal scrolling. Every control SHALL have an accessible name and role, and each row SHALL be announced as one item with its issue in words, with seats spoken as "section X row Y" rather than the visible "X / Y".
 
 #### Scenario: Screen reader on a row
 - **WHEN** VoiceOver focuses a feed row
-- **THEN** it reads the event, seats and issue in words, for example "Glass Harbour, section 104 row F, StubHub: shows 4, you have 2", and the Retry button is announced separately
+- **THEN** it reads the event, venue, seats and issue in words, for example "Glass Harbour – Tidal Tour, Harbour Arena, section 104 row F, StubHub: shows 4, you have 2", and the Retry button is announced separately
 
 ### Requirement: Fix one listing in under 20 seconds
 From a cold start of the app in Expo Go, the broker SHALL be able to fix the top listing (retry it, or change its price) in under 20 seconds.

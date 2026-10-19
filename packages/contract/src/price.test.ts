@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clampSuggestion, priceHealth, suggestPrice } from "./price";
+import { FAR_FROM_MARKET_BPS, PRICE_BANDS, clampSuggestion, priceHealth, suggestPrice } from "./price";
 
 describe("priceHealth", () => {
   it("treats exactly +15% as above, not overpriced", () => {
@@ -18,6 +18,14 @@ describe("priceHealth", () => {
     [78, "underpriced"],
   ] as const)("price %d against 100 is %s", (price, band) => {
     expect(priceHealth(price, 100).band).toBe(band);
+  });
+});
+
+describe("FAR_FROM_MARKET_BPS", () => {
+  it("is the suggestion clamp, 30%, and leaves the bands alone", () => {
+    expect(FAR_FROM_MARKET_BPS).toBe(3000);
+    expect(PRICE_BANDS).toEqual({ atMarketBps: 500, overpricedBps: 1500 });
+    expect(priceHealth(142, 100).band).toBe("overpriced");
   });
 });
 

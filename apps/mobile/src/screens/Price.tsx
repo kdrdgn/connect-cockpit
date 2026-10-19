@@ -40,7 +40,7 @@ export function PriceScreen({ route, navigation }: ScreenProps<'Price'>) {
         Price for {listing.event}
       </Text>
       <Text style={styles.meta}>
-        Now {formatPrice(listing.price)} · market {formatPrice(listing.marketPrice)}
+        Now <Text style={styles.now}>{formatPrice(listing.price)}</Text> · market {formatPrice(listing.marketPrice)}
       </Text>
       <View style={styles.stepper}>
         <Button label="−£1" accessibilityLabel="Lower by 1 pound" onPress={() => change(step(text, listing.price, -1))} />
@@ -77,6 +77,7 @@ const styles = StyleSheet.create({
   sheet: { gap: space[3], padding: space[4], backgroundColor: c.surface },
   title: { ...type.lg, fontWeight: '600', color: c.ink },
   meta: { ...type.md, color: c.inkMuted },
+  now: { fontWeight: '600', color: c.ink },
   stepper: { flexDirection: 'row', alignItems: 'center', gap: space[2] },
   field: {
     flex: 1,

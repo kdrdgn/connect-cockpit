@@ -114,7 +114,7 @@ const FeedRow = memo(function FeedRow({ id, now, onOpen }: { id: string; now: nu
         style={({ pressed }) => [styles.main, pressed && styles.pressed]}
         onPress={onOpen}
         accessibilityRole="button"
-        accessibilityLabel={`${listing.event}, ${seats}, ${words}`}
+        accessibilityLabel={`${listing.event}, ${listing.venue}, ${seats}, ${words}`}
         accessibilityHint="Opens the listing"
       >
         <Text style={[styles.glyph, quiet ? styles.muted : styles.attention]} accessible={false}>
@@ -124,8 +124,11 @@ const FeedRow = memo(function FeedRow({ id, now, onOpen }: { id: string; now: nu
           <Text style={[styles.event, quiet && styles.muted]} numberOfLines={1}>
             {listing.event}
           </Text>
+          <Text style={styles.meta} numberOfLines={1}>
+            {listing.venue}
+          </Text>
           <Text style={styles.meta}>
-            {formatDate(listing.date)} · Sec {listing.section} row {listing.row}
+            {formatDate(listing.date)} · {listing.section} / {listing.row}
           </Text>
           <Text style={[styles.issue, quiet ? styles.muted : styles.attention]}>{failure ?? words}</Text>
         </View>

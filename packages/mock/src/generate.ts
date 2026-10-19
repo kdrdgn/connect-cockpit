@@ -1,7 +1,7 @@
 import { type Listing, MARKETPLACES, type SyncEntry, type SyncState } from "@cockpit/contract";
 import { makeRng } from "./rng";
 import { INJECTION_ERROR, INJECTION_EVENT, ORDINARY_TEMPLATES } from "./templates";
-import { VENUE } from "./venue";
+import { LAYOUT, VENUES } from "./venue";
 
 export const DEFAULT_DATA_SEED = 20261019;
 export const LISTING_COUNT = 500;
@@ -29,6 +29,28 @@ const ARTISTS = [
   INJECTION_EVENT,
 ] as const;
 
+// Fictional tour names, one per artist in the same order. Event names read "<artist> – <tour>".
+const TOURS = [
+  "Tidal Tour",
+  "Static Bloom Tour",
+  "Paper Lanterns Tour",
+  "Cold Water Tour",
+  "Rust & Gold Tour",
+  "Afterglow Tour",
+  "Hollow Hearts Tour",
+  "High Wire Tour",
+  "Long Echo Tour",
+  "Coin-Op Tour",
+  "Folded Sky Tour",
+  "River Mouth Tour",
+  "Wingspan Tour",
+  "Fluorescent Tour",
+  "Quiet Hours Tour",
+  "Compass Tour",
+  "Last Crossing Tour",
+  "World Tour",
+] as const satisfies { length: typeof ARTISTS.length };
+
 const LEVEL_FACTOR = { floor: 1.6, lower: 1.2, upper: 0.8 } as const;
 const ROWS = "ABCDEFGHJKLMNPQRST".split("");
 const DAY = 86_400_000;
@@ -41,8 +63,10 @@ export function generate(dataSeed: number = DEFAULT_DATA_SEED, now: number = sta
   const rng = makeRng(dataSeed);
   const iso = (ms: number) => new Date(ms).toISOString();
 
+  // Names and venues come from the index, not the rng, so adding them left every other value for a seed unchanged.
   const events = ARTISTS.map((artist, i) => ({
-    name: artist,
+    name: `${artist} – ${TOURS[i]}`,
+    venue: VENUES[i % VENUES.length]!,
     date: iso(now + (2 + Math.floor((i * 118) / ARTISTS.length) + rng.int(0, 5)) * DAY + 19.5 * 3_600_000),
     basePrice: rng.int(40, 220),
   }));
@@ -50,7 +74,7 @@ export function generate(dataSeed: number = DEFAULT_DATA_SEED, now: number = sta
   const listings: Listing[] = [];
   for (let i = 0; i < LISTING_COUNT; i++) {
     const event = events[i % events.length]!;
-    const section = rng.pick(VENUE.sections);
+    const section = rng.pick(LAYOUT.sections);
     const quantity = rng.pick([1, 2, 2, 2, 3, 4, 4, 4, 6, 8]);
     const marketPrice = Math.max(15, Math.round(event.basePrice * LEVEL_FACTOR[section.level] * (0.85 + rng.next() * 0.3)));
     const gap = {
@@ -77,7 +101,7 @@ export function generate(dataSeed: number = DEFAULT_DATA_SEED, now: number = sta
     listings.push({
       id: `L${String(i + 1).padStart(4, "0")}`,
       event: event.name,
-      venue: VENUE.name,
+      venue: event.venue,
       date: event.date,
       section: section.id,
       row,

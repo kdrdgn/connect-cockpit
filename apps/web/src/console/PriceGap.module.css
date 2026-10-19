@@ -4,12 +4,25 @@
   justify-content: flex-end;
   gap: var(--space-1);
   width: 100%;
-  color: var(--color-ink-muted);
   font-variant-numeric: var(--font-numeric);
+}
+
+/* Louder the further from market. Only attention and strong are coloured; strong also doubles the glyph. */
+.muted {
+  color: var(--color-ink-muted);
+}
+
+.ink {
+  color: var(--color-ink);
 }
 
 .attention {
   color: var(--color-attention);
+  font-weight: var(--weight-semibold);
+}
+
+.strong {
+  color: var(--color-attention-strong);
   font-weight: var(--weight-semibold);
 }
 

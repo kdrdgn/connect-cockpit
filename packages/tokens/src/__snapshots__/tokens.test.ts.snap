@@ -43,6 +43,7 @@ exports[`design tokens > generates stable CSS variables 1`] = `
   --color-accent-bg: #E8EEFA;
   --color-attention: #8F5200;
   --color-attention-bg: #FCF1DE;
+  --color-attention-strong: #A8400A;
   --color-danger: #B3261E;
   --color-danger-bg: #FCEBE9;
   --row-height: 40px;
@@ -73,6 +74,7 @@ exports[`design tokens > generates stable CSS variables 1`] = `
   --color-accent-bg: #1C2A47;
   --color-attention: #F0B45A;
   --color-attention-bg: #3A2A12;
+  --color-attention-strong: #FF9A66;
   --color-danger: #F2867D;
   --color-danger-bg: #3D1C1A;
 }

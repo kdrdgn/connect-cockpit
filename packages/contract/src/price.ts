@@ -4,6 +4,9 @@ export const PRICE_BANDS = { atMarketBps: 500, overpricedBps: 1500 } as const;
 // Safety limit for machine-suggested prices; deliberately separate from the health bands.
 export const SUGGESTION_CLAMP = 0.3;
 
+// Display only: a gap beyond this is further from market than we'd ever suggest. Bands, problems and ranking ignore it.
+export const FAR_FROM_MARKET_BPS = SUGGESTION_CLAMP * 10_000;
+
 export type PriceBand = "overpriced" | "above" | "at_market" | "below" | "underpriced";
 
 export type PriceHealth = {

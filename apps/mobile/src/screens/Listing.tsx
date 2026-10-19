@@ -14,7 +14,7 @@ import { useMutationState } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { canRetryEntry, entryText, MARKETPLACE_NAME } from '../feed';
-import { formatDate, formatPrice } from '../format';
+import { formatDateLong, formatPrice } from '../format';
 import type { ScreenProps } from '../navigation';
 import { Button, c, type } from '../ui';
 import { useNow } from '../useNow';
@@ -34,7 +34,7 @@ export function ListingScreen({ route, navigation }: ScreenProps<'Listing'>) {
           {listing.event}
         </Text>
         <Text style={styles.meta}>
-          {formatDate(listing.date)} · {listing.venue}
+          {formatDateLong(listing.date)} · {listing.venue}
         </Text>
         <Text style={styles.meta}>
           Section {listing.section}, row {listing.row} · {listing.quantity} tickets

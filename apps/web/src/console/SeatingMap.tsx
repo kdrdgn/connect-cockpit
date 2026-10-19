@@ -1,6 +1,6 @@
 import { keys } from "@cockpit/client";
 import type { Listing } from "@cockpit/contract";
-import { type Point, VENUE, type VenueSection } from "@cockpit/mock";
+import { LAYOUT, type Point, type VenueSection } from "@cockpit/mock";
 import { useQueryClient } from "@tanstack/react-query";
 import { type KeyboardEvent, useMemo, useState } from "react";
 import { Button } from "@/ui/Button";
@@ -51,7 +51,7 @@ function labelPoint(poly: readonly Point[]): Point {
   return best;
 }
 
-const LABELS = new Map(VENUE.sections.map((s) => [s.id, labelPoint(s.points)]));
+const LABELS = new Map(LAYOUT.sections.map((s) => [s.id, labelPoint(s.points)]));
 
 /** Listings per section in the current view. Sections never drift, so this only changes with the view. */
 function useSectionCounts(loadedIds: readonly string[]) {
@@ -89,19 +89,19 @@ export function SeatingMap({
   return (
     <section className={collapsed ? `${styles.map} ${styles.collapsed}` : styles.map} aria-label="Venue map">
       <header className={styles.header}>
-        {!collapsed && <h2 className={styles.title}>{VENUE.name}</h2>}
+        {!collapsed && <h2 className={styles.title}>{LAYOUT.name}</h2>}
         <Button variant="ghost" aria-expanded={!collapsed} onClick={() => setCollapsed((c) => !c)}>
           {collapsed ? "Map" : "Hide map"}
         </Button>
       </header>
       {!collapsed && (
         <>
-          <svg className={styles.svg} viewBox={VENUE.viewBox} role="group" aria-label={`${VENUE.name} sections. Choose one to filter the table.`}>
-            <polygon className={styles.stage} points={pts(VENUE.stage)} />
+          <svg className={styles.svg} viewBox={LAYOUT.viewBox} role="group" aria-label={`${LAYOUT.name} sections. Choose one to filter the table.`}>
+            <polygon className={styles.stage} points={pts(LAYOUT.stage)} />
             <text className={styles.stageLabel} x={400} y={54} textAnchor="middle" aria-hidden="true">
               Stage
             </text>
-            {VENUE.sections.map((s) => (
+            {LAYOUT.sections.map((s) => (
               <Section
                 key={s.id}
                 section={s}

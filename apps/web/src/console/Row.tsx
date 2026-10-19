@@ -4,7 +4,7 @@ import { skipToken, useQuery } from "@tanstack/react-query";
 import { memo } from "react";
 import { PriceGap } from "./PriceGap";
 import { SyncGlyph } from "./SyncGlyph";
-import { colIndex } from "./columns";
+import { COLUMN_COUNT, colIndex } from "./columns";
 import { EditCell } from "./EditCell";
 import { formatDate, formatDateLong } from "./format";
 import { selectRow, useViewIds } from "./selection";
@@ -72,20 +72,33 @@ export const Row = memo(function Row({ id, index }: { id: string; index: number 
           data-col={colIndex("select")}
         />
       </td>
-      <td className={previousEvent === eventKey(listing) ? `${styles.event} ${styles.repeat}` : styles.event} title={listing.event}>
-        {listing.event}
+      <td
+        className={previousEvent === eventKey(listing) ? `${styles.event} ${styles.repeat}` : styles.event}
+        title={`${listing.event} · ${listing.venue}`}
+      >
+        {/* Stacked in comfortable; one line in compact, where the venue is cut before the event. */}
+        <span className={styles.eventStack}>
+          <span className={styles.eventName}>{listing.event}</span>
+          <span className={styles.venueDot} aria-hidden="true">
+            {" · "}
+          </span>
+          <span className={styles.srOnly}>, </span>
+          <span className={styles.venue}>{listing.venue}</span>
+        </span>
         {problems > 0 && <span className={styles.srOnly}>{`, ${problems} problem${problems === 1 ? "" : "s"}`}</span>}
         {bulkFailed && <span className={styles.srOnly}>, last bulk change failed</span>}
       </td>
       <td className={styles.muted} title={formatDateLong(listing.date)}>
         {formatDate(listing.date)}
       </td>
-      <td>{listing.section}</td>
-      <td className={styles.muted}>{listing.row}</td>
+      <td className={styles.muted} data-seats={listing.section}>
+        <span aria-hidden="true">{`${listing.section} / ${listing.row}`}</span>
+        <span className={styles.srOnly}>{`Section ${listing.section}, row ${listing.row}`}</span>
+      </td>
       <td className={`${styles.num} ${styles.editCell}`}>
         <EditCell id={id} index={index} field="quantity" value={listing.quantity} version={listing.version} label="Quantity" />
       </td>
-      <td className={`${styles.num} ${styles.editCell}`}>
+      <td className={`${styles.num} ${styles.editCell} ${styles.price}`}>
         <EditCell
           id={id}
           index={index}
@@ -120,7 +133,7 @@ export function PlaceholderRow({ index }: { index: number }) {
       <td colSpan={2}>
         <span className={styles.bar} style={{ width: `${40 + ((index * 37) % 45)}%` }} />
       </td>
-      <td colSpan={10}>
+      <td colSpan={COLUMN_COUNT - 2}>
         <span className={styles.bar} style={{ width: "60%" }} />
       </td>
     </tr>

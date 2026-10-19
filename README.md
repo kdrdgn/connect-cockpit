@@ -78,13 +78,13 @@ The API the backend should provide is in [`docs/api-wishlist.md`](docs/api-wishl
 - **An edit is checked against the version it started from.** If someone else changes the listing while the broker is typing, the incoming change updates the sync cells but not the input, and committing gives "Changed elsewhere to £125. Your £130 was not saved." It never silently overwrites.
 - **A new filter clears the selection,** so a bulk action can only touch rows the broker can see.
 - **Bulk sends absolute prices with each row's version.** What the preview showed is exactly what is written; a row that changed since the preview fails on its own with a conflict. "Retry failed" and Undo are new intents with new idempotency keys. Undo reverses only what succeeded, has depth 1, and is itself a write that can fail per row. Undoing a delist is labelled "Relist (may lose position)".
-- **Red means one thing: a write that failed and was rolled back.** Errors on marketplaces are amber.
+- **Red means one thing: a write that failed and was rolled back.** Errors on marketplaces are amber. A price far from market (beyond ±30%) is a darker orange with a doubled glyph, still not red.
 
 ### Colour, and the founder's two notes
 
 > Colour is reserved for "needs you": a healthy row is grey, so the few coloured marks are the work queue. That makes the price dot quiet most of the time; I gave up always-on coloured dots (#2) so that an error stands out without alarm (#1), even in compact mode.
 
-Each signal has its own channel. Sync state is a shape in a fixed column (dot live, ring pending, ring with a clock stuck pending, triangle error, diamond quantity mismatch, dash not listed), always with words for screen readers. Price health is a direction glyph plus the signed gap. A problem row gets an amber edge, and there's a count in the toolbar.
+Each signal has its own channel. Sync state is a shape in a fixed column (dot live, ring pending, ring with a clock stuck pending, triangle error, diamond quantity mismatch, dash not listed), always with words for screen readers. Price health is a direction glyph plus the signed gap, louder the further from market: grey at market, ink above or below, amber when overpriced or underpriced (beyond ±15%), and a darker orange with a doubled glyph (▲▲) beyond ±30%, the furthest the app would ever suggest a price. The two oranges differ by shape as well as hue. A problem row gets an amber edge, and there's a count in the toolbar.
 
 ### Keyboard
 
@@ -100,12 +100,13 @@ Each signal has its own channel. Sync state is a shape in a fixed column (dot li
 
 | Message | What I did | Why |
 |---|---|---|
-| #1 "Red looks scary everywhere" | Errors are amber with a shape, never red. Red appears only for a write that was just rolled back. A healthy row is plain grey. | Problems stay visible without the "house on fire" feeling, and red keeps its meaning for the rare moment something you did didn't stick. |
-| #2 "Priced above or below market without opening anything" | Every row has a direction glyph and the signed gap ("▲ +31%"). It's coloured only when overpriced or underpriced (beyond ±15%). | The answer is on the row, but quiet. See the colour trade-off above: always-on coloured dots would compete with errors. |
+| #1 "Red looks scary everywhere" | Errors are amber with a shape, never red. Red appears only for a write that was just rolled back. A healthy row is plain grey. A price beyond ±30% of market gets a darker orange and a doubled glyph, not red. | Problems stay visible without the "house on fire" feeling, and red keeps its meaning for the rare moment something you did didn't stick. |
+| #2 "Priced above or below market without opening anything" | Every row has a direction glyph and the signed gap ("▲ +31%"). It's coloured only when overpriced or underpriced (beyond ±15%), and gets a darker orange with a doubled glyph (▲▲ +42%) beyond ±30%. | The answer is on the row, but quiet. See the colour trade-off above: always-on coloured dots would compete with errors. |
 | #3 "If I have to touch the mouse to change a price I'm leaving" | Edit from the keyboard: Enter or a digit to start, Enter to save, Escape to cancel, Tab to save and move on. Bulk changes, the sync drawer, problem jumping (`n`) and the map work from the keyboard too. | The broker's main loop (find a problem, fix the price, move on) never needs the mouse. Checked with Playwright specs. |
 | #4 "Sold 2 of 4 and StubHub still shows 4" (web half) | Marketplaces report `listedQuantity`. A mismatch is the top-ranked problem: a diamond in that marketplace's column, an amber edge on the row, and first in `n`. The toolbar counts problems, and clicking the count shows only them. Opening an errored marketplace in the drawer also explains the error in plain words and suggests one fix (see "AI feature"). | Overselling is the most expensive failure, so it ranks above errors. Knowing something is wrong is half the job; the explanation helps with "and what do I do about it". The phone's problems feed (Track B) uses the same ranking from `packages/contract`. |
 | #4 (phone half) | The phone opens on a problems feed ordered by the same `problemRank`, so a quantity mismatch is the first row: "StubHub: shows 4, you have 2", with a Retry button on the row. | The broker learns about the mismatch without checking any site, and can push the correct count from the sofa in one tap. |
 | #5 "Fix one listing from the sofa in under 20 seconds" | An Expo app: problems feed → listing → one-tap Retry, a price sheet (pre-filled, ±£1, Save), or delist behind a native confirmation. Every control is at least 44 points. | Treated as a timed script: open, tap the top row, Edit price, +£2, Save. See "Running the mobile app" for the run and the decision note in [`docs/mobile-adr.md`](docs/mobile-adr.md). |
+| Row hierarchy (my own review) | The event reads "Artist – Tour" in semibold with its venue under it (after it, on one line, in compact). The price is semibold. The date is "30 Oct", section and row are one "112 / F" column, and both are muted. The phone feed uses the same event, venue, date and seat notation. | The eye lands on what and how much first, and the seat details stay readable without competing. Compact still shows 35 rows on a 1080p screen. |
 
 ## Performance
 
@@ -204,4 +205,4 @@ It targets **Expo SDK 57**, the SDK that the store version of Expo Go supports a
 
 ## Fixtures
 
-Artists, venue and error messages are fictional. The 7 `lastError` templates in `packages/mock/src/templates.ts` are **invented**; no real marketplace samples were available. Two prompt-injection fixtures are planted on purpose (one in a `lastError`, one in an event name) to test the AI feature's defences.
+Artists, tours, venues and error messages are fictional. The five venues share one seating layout, so a section on the map means the same seats at every venue. The 7 `lastError` templates in `packages/mock/src/templates.ts` are **invented**; no real marketplace samples were available. Two prompt-injection fixtures are planted on purpose (one in a `lastError`, one in an event name) to test the AI feature's defences.
