@@ -1,0 +1,86 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`design tokens > generates stable CSS variables 1`] = `
+":root {
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-numeric: tabular-nums;
+  --space-0: 0px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-0_5: 2px;
+  --text-xs-size: 12px;
+  --text-xs-line: 16px;
+  --text-sm-size: 13px;
+  --text-sm-line: 16px;
+  --text-md-size: 14px;
+  --text-md-line: 20px;
+  --text-lg-size: 16px;
+  --text-lg-line: 24px;
+  --text-xl-size: 20px;
+  --text-xl-line: 28px;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --color-bg: #F5F6F8;
+  --color-surface: #FFFFFF;
+  --color-surface-raised: #FFFFFF;
+  --color-border: #E2E5E9;
+  --color-border-strong: #C5CAD1;
+  --color-ink: #1A1E23;
+  --color-ink-muted: #47505B;
+  --color-ink-subtle: #5F6873;
+  --color-accent: #2152BF;
+  --color-accent-bg: #E8EEFA;
+  --color-attention: #8F5200;
+  --color-attention-bg: #FCF1DE;
+  --color-danger: #B3261E;
+  --color-danger-bg: #FCEBE9;
+  --row-height: 40px;
+  --cell-x: 12px;
+  --cell-font-size: 14px;
+  --cell-line-height: 20px;
+}
+
+[data-density="compact"] {
+  --row-height: 28px;
+  --cell-x: 8px;
+  --cell-font-size: 13px;
+  --cell-line-height: 16px;
+}
+
+/* Dark values are defined but not contrast-verified; opt in with data-theme="dark". */
+
+[data-theme="dark"] {
+  --color-bg: #101317;
+  --color-surface: #171B20;
+  --color-surface-raised: #1E232A;
+  --color-border: #2A3038;
+  --color-border-strong: #3A424C;
+  --color-ink: #E8EBEF;
+  --color-ink-muted: #B4BCC6;
+  --color-ink-subtle: #8D96A1;
+  --color-accent: #7AA2F7;
+  --color-accent-bg: #1C2A47;
+  --color-attention: #F0B45A;
+  --color-attention-bg: #3A2A12;
+  --color-danger: #F2867D;
+  --color-danger-bg: #3D1C1A;
+}
+
+@media (prefers-reduced-motion: reduce) {
+:root {
+  --motion-fast: 0ms;
+  --motion-base: 0ms;
+}
+}"
+`;

@@ -1,0 +1,20 @@
+{
+  "name": "connect-cockpit",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.5.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:mobile": "pnpm --filter mobile start",
+    "test": "vitest run",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.5"
+  }
+}

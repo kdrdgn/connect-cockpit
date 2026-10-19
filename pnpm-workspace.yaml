@@ -1,0 +1,8 @@
+packages:
+  - apps/*
+  - packages/*
+allowBuilds:
+  sharp: false
+  unrs-resolver: false
+overrides:
+  "@expo/dom-webview": ~57.0.1
