@@ -2,6 +2,10 @@
 
 A broker console for ~500 ticket listings synced to four marketplaces: a Next.js web console and an Expo phone app, both running against a mock API that misbehaves on purpose.
 
+- **Live:** https://connect-cockpit.vercel.app (add `?seed=42&failRate=50` to see failures, `?demo=1` for the demo panel)
+- **Repo:** https://github.com/kdrdgn/connect-cockpit
+- **AI on the live site** answers from the labelled mock unless `ANTHROPIC_API_KEY` is set on Vercel.
+
 ## How to run
 
 Requires Node 20+ and pnpm 11.
