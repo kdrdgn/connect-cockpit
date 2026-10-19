@@ -1,7 +1,7 @@
 import type { ChangesResponse, Listing } from "@cockpit/contract";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "./client";
-import { createPoller, isStalled, type PollerDeps } from "./live";
+import { createPoller, isStalled, type PollerDeps, visibilityDeps } from "./live";
 
 let hidden = false;
 let visibility: (() => void) | null = null;
@@ -100,5 +100,35 @@ describe("client.getChanges for polls", () => {
     client.onRateLimit((u) => waits.push(u));
     await expect(client.getChanges("0", undefined, { retryRateLimit: false })).rejects.toMatchObject({ code: "RATE_LIMITED", retryAfterMs: 3000 });
     expect(waits).toEqual([]);
+  });
+});
+
+describe("visibilityDeps", () => {
+  it("lets a non-browser source (React Native's AppState) pause and resume polling", async () => {
+    let appHidden = true;
+    let notify: (() => void) | null = null;
+    const calls: string[] = [];
+    const poller = createPoller("0", {
+      getChanges: async (since) => {
+        calls.push(since);
+        return { changes: [], changesCursor: String(Number(since) + 1) };
+      },
+      apply: () => {},
+      ...visibilityDeps({
+        isHidden: () => appHidden,
+        subscribe: (l) => {
+          notify = l;
+          return () => (notify = null);
+        },
+      }),
+    });
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(calls).toHaveLength(0);
+    appHidden = false;
+    notify!();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(calls).toEqual(["0"]);
+    poller.stop();
+    expect(notify).toBeNull();
   });
 });

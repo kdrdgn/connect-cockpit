@@ -96,6 +96,8 @@ A "Skip to bulk actions" link comes first, because Tab walks every rendered cell
 | #2 "Priced above or below market without opening anything" | Every row has a direction glyph and the signed gap ("▲ +31%"). It's coloured only when overpriced or underpriced (beyond ±15%). | The answer is on the row, but quiet. See the colour trade-off above: always-on coloured dots would compete with errors. |
 | #3 "If I have to touch the mouse to change a price I'm leaving" | Edit from the keyboard: Enter or a digit to start, Enter to save, Escape to cancel, Tab to save and move on. Bulk changes, the sync drawer, problem jumping (`n`) and the map work from the keyboard too. | The broker's main loop (find a problem, fix the price, move on) never needs the mouse. Checked with Playwright specs. |
 | #4 "Sold 2 of 4 and StubHub still shows 4" (web half) | Marketplaces report `listedQuantity`. A mismatch is the top-ranked problem: a diamond in that marketplace's column, an amber edge on the row, and first in `n`. The toolbar counts problems, and "Problems only" filters to them. Opening an errored marketplace in the drawer also explains the error in plain words and suggests one fix (see "AI feature"). | Overselling is the most expensive failure, so it ranks above errors. Knowing something is wrong is half the job; the explanation helps with "and what do I do about it". The phone's problems feed (Track B) uses the same ranking from `packages/contract`. |
+| #4 (phone half) | The phone opens on a problems feed ordered by the same `problemRank`, so a quantity mismatch is the first row: "StubHub: shows 4, you have 2", with a Retry button on the row. | The broker learns about the mismatch without checking any site, and can push the correct count from the sofa in one tap. |
+| #5 "Fix one listing from the sofa in under 20 seconds" | An Expo app: problems feed → listing → one-tap Retry, a price sheet (pre-filled, ±£1, Save), or delist behind a native confirmation. Every control is at least 44 points. | Treated as a timed script: open, tap the top row, Edit price, +£2, Save. See "Running the mobile app" for the run and the decision note in [`docs/mobile-adr.md`](docs/mobile-adr.md). |
 
 ## Performance
 
@@ -168,11 +170,25 @@ Passing against the mock only proves the pipeline. The mock is keyword rules ove
 
 - **Measured AI tokens and latency.** No API key was available while building, so the AI numbers above come from the mock and from character counts; `pnpm eval` with a key produces the real ones.
 - **Rate limiting on the AI route.** Anyone who can reach the app can call the model. Production would put it behind the broker's session and a per-user limit.
+- **Push notifications, Face ID, TestFlight.** They all need a development build, and the slice runs in Expo Go. The ADR's two-week plan starts with them.
+- **AI on the phone.** The phone has no server to call, and the 20-second fix doesn't need it.
+- **Phone and web sharing state.** Each runs its own copy of the mock, so an edit on the phone doesn't appear on the web.
+- **React Native component tests.** The feed logic (ranking, wording, which marketplaces can be retried) is unit-tested in Vitest. The screens were checked by hand on a phone.
 - **Go mock service (Track D2).** Cut to protect Track A; the mock is TypeScript only. I would rather make the Go change together in the demo, where how I read and steer the diff is visible, than ship ~150 lines I could not defend line by line. <!-- TODO(author): state your actual Go experience here in one honest line. -->
 
 ## Running the mobile app
 
-The phone app has its own in-process copy of the mock, so it needs no server. Start it with `pnpm dev:mobile` and scan the QR code with Expo Go.
+The phone app has its own in-process copy of the mock, so it needs no server. Start it with `pnpm dev:mobile` and scan the QR code with Expo Go. To make the same writes fail on every launch (for a repeatable demo), pin the write seed:
+
+```bash
+EXPO_PUBLIC_SEED=42 pnpm dev:mobile
+```
+
+**What's on the phone.** A problems feed, worst first by the same ranking as the console (mismatch, error, stuck pending, overpriced, then ordinary pending, muted at the bottom). Rows update live, but the order only changes on pull to refresh or when you come back from a listing, so nothing moves under your thumb. A row's Retry fixes it in one tap. The listing screen shows each marketplace's state and full error, Retry sync, Delist (with a native confirmation) and Edit price, a sheet with ±£1 steppers. A failed save rolls back and says why on the listing screen, with Retry. Polling stops in the background and catches up once on return.
+
+**No AI on the phone.** The explanation is web-only by choice: the phone runs without a server, and the manual actions cover the 20-second fix.
+
+**Why Expo, and what wasn't shipped natively:** see [`docs/mobile-adr.md`](docs/mobile-adr.md).
 
 It targets **Expo SDK 57**, the SDK that the store version of Expo Go supports at the time of writing (SDK 58 is on npm, but Expo Go in the App Store is still on 57). If Expo Go says the project needs a newer version, check the SDK it lists under Settings.
 

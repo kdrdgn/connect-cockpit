@@ -29,6 +29,16 @@ export type PollerDeps = {
   onVisibilityChange?: (listener: () => void) => () => void;
 };
 
+/** Where "hidden" comes from: `document` in a browser by default, `AppState` on React Native. */
+export type VisibilitySource = {
+  isHidden: () => boolean;
+  /** Called on every change; returns an unsubscribe. */
+  subscribe: (listener: () => void) => () => void;
+};
+
+export const visibilityDeps = (source: VisibilitySource | undefined): Pick<PollerDeps, "isHidden" | "onVisibilityChange"> =>
+  source ? { isHidden: source.isHidden, onVisibilityChange: source.subscribe } : {};
+
 /**
  * Polls `/listings/changes` from a cursor. A setTimeout loop, not setInterval, so a slow response never
  * stacks a second request. Hidden pages don't poll; becoming visible makes one immediate catch-up call.
@@ -127,9 +137,13 @@ const noop = () => () => {};
 /**
  * Keeps listings current. Starts once a cursor is known (from the first list page) and keeps its own cursor
  * after that, so a filter change never rewinds it. Changes go through `applyChanges`: one entry per listing.
+ * `visibility` must be stable (a module constant): a new object restarts the poller.
  */
-export function useLiveChanges(cursor: string | undefined, options: { intervalMs?: number; enabled?: boolean } = {}) {
-  const { intervalMs = 3000, enabled = true } = options;
+export function useLiveChanges(
+  cursor: string | undefined,
+  options: { intervalMs?: number; enabled?: boolean; visibility?: VisibilitySource } = {},
+) {
+  const { intervalMs = 3000, enabled = true, visibility } = options;
   const qc = useQueryClient();
   const client = useClient();
   const [poller, setPoller] = useState<Poller | null>(null);
@@ -141,6 +155,7 @@ export function useLiveChanges(cursor: string | undefined, options: { intervalMs
       getChanges: (since, signal) => client.getChanges(since, signal, { retryRateLimit: false }),
       apply: (changes) => applyChanges(qc, changes),
       intervalMs,
+      ...visibilityDeps(visibility),
     });
     setPoller(p);
     return () => {
@@ -149,7 +164,7 @@ export function useLiveChanges(cursor: string | undefined, options: { intervalMs
     };
     // The cursor only seeds the poller; later list pages must not restart it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [started, client, qc, intervalMs]);
+  }, [started, client, qc, intervalMs, visibility]);
 
   const status = useSyncExternalStore(poller?.subscribe ?? noop, () => poller?.getStatus() ?? IDLE, () => IDLE);
   return { status, pollNow: () => poller?.pollNow() };
