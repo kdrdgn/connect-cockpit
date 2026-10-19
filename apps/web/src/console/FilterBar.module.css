@@ -70,14 +70,6 @@
   font-variant-numeric: var(--font-numeric);
 }
 
-.toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  font-size: var(--text-sm-size);
-  cursor: pointer;
-}
-
 .panelFooter {
   display: flex;
   justify-content: flex-end;

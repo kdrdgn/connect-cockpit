@@ -13,8 +13,9 @@
   font-weight: var(--weight-semibold);
 }
 
+/* Big enough to tell ▲ from ▼ at a glance; the flat dot stays small on purpose (nothing to see). */
 .glyph {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   flex: none;
 }

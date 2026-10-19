@@ -7,6 +7,9 @@ import { Button } from "@/ui/Button";
 import styles from "./SeatingMap.module.css";
 import { useUi } from "./store";
 
+/** Below this window width the map starts collapsed. */
+export const MAP_OPEN_MIN_WIDTH = 1280;
+
 const pts = (p: readonly Point[]) => p.map(([x, y]) => `${x},${y}`).join(" ");
 
 function inside([x, y]: Point, poly: readonly Point[]): boolean {
@@ -65,14 +68,18 @@ function useSectionCounts(loadedIds: readonly string[]) {
 
 export function SeatingMap({
   loadedIds,
+  counting,
   activeSection,
   onToggleSection,
 }: {
   loadedIds: readonly string[];
+  /** Pages still loading: show "–" rather than counts that would climb for a few seconds. */
+  counting: boolean;
   activeSection: string | null;
   onToggleSection: (section: string) => void;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
+  // Starts closed on narrower screens, where its 340px would push the sync columns off the table.
+  const [collapsed, setCollapsed] = useState(() => typeof window !== "undefined" && window.innerWidth < MAP_OPEN_MIN_WIDTH);
   const counts = useSectionCounts(loadedIds);
   const qc = useQueryClient();
   // The focused row's section, or the drawer listing's when the drawer is open.
@@ -98,7 +105,7 @@ export function SeatingMap({
               <Section
                 key={s.id}
                 section={s}
-                count={counts.get(s.id) ?? 0}
+                count={counting ? null : (counts.get(s.id) ?? 0)}
                 active={activeSection === s.id}
                 highlighted={highlighted === s.id}
                 onToggle={() => onToggleSection(s.id)}
@@ -123,12 +130,14 @@ function Section({
   onToggle,
 }: {
   section: VenueSection;
-  count: number;
+  /** Null while the view is still loading. */
+  count: number | null;
   active: boolean;
   highlighted: boolean;
   onToggle: () => void;
 }) {
   const [x, y] = LABELS.get(section.id)!;
+  const listings = count === null ? "counting listings" : `${count} listing${count === 1 ? "" : "s"}`;
   const cls = [styles.section, styles[section.level], active && styles.active, highlighted && styles.highlighted, count === 0 && styles.empty]
     .filter(Boolean)
     .join(" ");
@@ -144,7 +153,7 @@ function Section({
       role="button"
       tabIndex={0}
       aria-pressed={active}
-      aria-label={`Section ${section.id}${section.label !== section.id ? ` (${section.label})` : ""}, ${count} listing${count === 1 ? "" : "s"}${highlighted ? ", current row" : ""}`}
+      aria-label={`Section ${section.id}${section.label !== section.id ? ` (${section.label})` : ""}, ${listings}${highlighted ? ", current row" : ""}`}
       data-section={section.id}
       onClick={onToggle}
       onKeyDown={onKeyDown}
@@ -154,7 +163,7 @@ function Section({
         {section.id}
       </text>
       <text x={x} y={y + 24} textAnchor="middle" className={styles.count} aria-hidden="true">
-        {count}
+        {count ?? "–"}
       </text>
     </g>
   );

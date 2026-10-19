@@ -19,7 +19,8 @@ const intentText = (i: BulkIntent) => (i.kind === "price" ? `${pctText(i.pct)} p
 export function BulkControls({ flow }: { flow: ReturnType<typeof useBulkFlow> }) {
   const ids = useViewIds();
   const [pct, setPct] = useState("-10");
-  const [mp, setMp] = useState<Marketplace>("stubhub");
+  // No default: delisting is destructive, so the broker picks the marketplace on purpose.
+  const [mp, setMp] = useState<Marketplace | "">("");
   const n = Number(pct);
   const pctValid = pct.trim() !== "" && Number.isFinite(n) && n !== 0 && n > -100 && n <= 200;
   return (
@@ -34,27 +35,30 @@ export function BulkControls({ flow }: { flow: ReturnType<typeof useBulkFlow> })
         <label htmlFor="bulk-pct">Change price by</label>
         <input id="bulk-pct" className={styles.pct} inputMode="numeric" value={pct} onChange={(e) => setPct(e.target.value)} aria-describedby="bulk-pct-unit" />
         <span id="bulk-pct-unit">%</span>
-        <Button type="submit" disabled={!pctValid} aria-label="Preview price change">
-          Preview…
+        <Button type="submit" disabled={!pctValid}>
+          Preview price change…
         </Button>
       </form>
       <form
         className={styles.group}
         onSubmit={(e) => {
           e.preventDefault();
-          flow.preview({ kind: "delist", marketplace: mp }, ids);
+          if (mp) flow.preview({ kind: "delist", marketplace: mp }, ids);
         }}
       >
         <label htmlFor="bulk-mp">Delist from</label>
-        <select id="bulk-mp" className={styles.select} value={mp} onChange={(e) => setMp(e.target.value as Marketplace)}>
+        <select id="bulk-mp" className={styles.select} value={mp} onChange={(e) => setMp(e.target.value as Marketplace | "")}>
+          <option value="" disabled>
+            Choose…
+          </option>
           {MARKETPLACES.map((m) => (
             <option key={m} value={m}>
               {MARKETPLACE_NAME[m]}
             </option>
           ))}
         </select>
-        <Button type="submit" aria-label="Preview delist">
-          Preview…
+        <Button type="submit" disabled={!mp}>
+          Preview delist…
         </Button>
       </form>
     </>

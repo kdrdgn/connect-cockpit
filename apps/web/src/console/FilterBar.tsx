@@ -138,14 +138,6 @@ export function FilterBar({
         />
       </Popover>
 
-      <label className={styles.toggle}>
-        <input
-          type="checkbox"
-          checked={values.problem === "any"}
-          onChange={(e) => void setValues({ problem: e.target.checked ? "any" : null })}
-        />
-        Problems only
-      </label>
     </div>
   );
 }

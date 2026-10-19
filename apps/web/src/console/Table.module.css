@@ -94,6 +94,12 @@
   font-weight: var(--weight-medium);
 }
 
+/* Same event and date as the row above: muted, so each new event stands out when scanning down. */
+.repeat {
+  color: var(--color-ink-subtle);
+  font-weight: var(--weight-regular);
+}
+
 .muted {
   color: var(--color-ink-muted);
 }
@@ -135,6 +141,10 @@
   font-variant-numeric: var(--font-numeric);
   text-align: right;
   cursor: text;
+  /* A huge figure truncates inside its own column instead of spilling into the next. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .cellButton:hover {
@@ -231,6 +241,13 @@
   font-size: var(--text-xs-size);
   line-height: var(--text-xs-line);
   white-space: nowrap;
+}
+
+/* An outlying price waiting for a second Enter: attention, not danger (danger is only for rollbacks). */
+.editWarning {
+  border: 1px solid var(--color-attention);
+  background: var(--color-attention-bg);
+  color: var(--color-ink);
 }
 
 .saving {

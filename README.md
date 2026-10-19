@@ -35,6 +35,8 @@ The first `pnpm e2e` on a new machine may need `pnpm --filter web exec playwrigh
 | `failRate` | `15` | % of write attempts that fail |
 | `rate429` | `5` | % of reads that return 429 with `Retry-After` |
 
+Params are read once, when the page loads, and only affect the mock: `seed` and `failRate` show up when you save something, `rate429` on reads. On load, the browser console logs the active settings (`[mock] latency 300–800 ms · writes fail 15% · …`). A value the mock can't use, such as `failRate=50%` or `latency=500`, is ignored with a warning toast saying what it used instead.
+
 Example: `http://localhost:3000/?seed=42&failRate=50` makes failures easy to demo. Add `demo=1` for a small panel that switches chaos, sets the failure rate and triggers a drift tick while the page is open.
 
 **Mock state resets on reload by design**, so every session starts from the same seeded data. Edits made on the phone do not appear on the web, because each runs its own copy of the mock.
@@ -92,7 +94,7 @@ Each signal has its own channel. Sync state is a shape in a fixed column (dot li
 | Table | Tab / Shift+Tab next / previous cell · arrow keys · Home / End · Ctrl+Home / Ctrl+End · Page Up / Page Down (20 rows) · Space select row · Shift+Space extend selection · Enter / F2 / a digit edit · `o` sync details |
 | Editing | Enter save and stay · Escape cancel · Tab / Shift+Tab save and move right / left |
 
-A "Skip to bulk actions" link comes first, because Tab walks every rendered cell. Letter shortcuts never fire while typing or while a dialog is open, and each has a visible button too: screen readers in browse mode keep letter keys for themselves.
+"Skip to listings" and "Skip to bulk actions" links come first, because Tab walks every toolbar control, sort header and rendered cell. Letter shortcuts never fire while typing or while a dialog is open, and each has a visible button too: screen readers in browse mode keep letter keys for themselves.
 
 ## Feedback log
 
@@ -101,7 +103,7 @@ A "Skip to bulk actions" link comes first, because Tab walks every rendered cell
 | #1 "Red looks scary everywhere" | Errors are amber with a shape, never red. Red appears only for a write that was just rolled back. A healthy row is plain grey. | Problems stay visible without the "house on fire" feeling, and red keeps its meaning for the rare moment something you did didn't stick. |
 | #2 "Priced above or below market without opening anything" | Every row has a direction glyph and the signed gap ("▲ +31%"). It's coloured only when overpriced or underpriced (beyond ±15%). | The answer is on the row, but quiet. See the colour trade-off above: always-on coloured dots would compete with errors. |
 | #3 "If I have to touch the mouse to change a price I'm leaving" | Edit from the keyboard: Enter or a digit to start, Enter to save, Escape to cancel, Tab to save and move on. Bulk changes, the sync drawer, problem jumping (`n`) and the map work from the keyboard too. | The broker's main loop (find a problem, fix the price, move on) never needs the mouse. Checked with Playwright specs. |
-| #4 "Sold 2 of 4 and StubHub still shows 4" (web half) | Marketplaces report `listedQuantity`. A mismatch is the top-ranked problem: a diamond in that marketplace's column, an amber edge on the row, and first in `n`. The toolbar counts problems, and "Problems only" filters to them. Opening an errored marketplace in the drawer also explains the error in plain words and suggests one fix (see "AI feature"). | Overselling is the most expensive failure, so it ranks above errors. Knowing something is wrong is half the job; the explanation helps with "and what do I do about it". The phone's problems feed (Track B) uses the same ranking from `packages/contract`. |
+| #4 "Sold 2 of 4 and StubHub still shows 4" (web half) | Marketplaces report `listedQuantity`. A mismatch is the top-ranked problem: a diamond in that marketplace's column, an amber edge on the row, and first in `n`. The toolbar counts problems, and clicking the count shows only them. Opening an errored marketplace in the drawer also explains the error in plain words and suggests one fix (see "AI feature"). | Overselling is the most expensive failure, so it ranks above errors. Knowing something is wrong is half the job; the explanation helps with "and what do I do about it". The phone's problems feed (Track B) uses the same ranking from `packages/contract`. |
 | #4 (phone half) | The phone opens on a problems feed ordered by the same `problemRank`, so a quantity mismatch is the first row: "StubHub: shows 4, you have 2", with a Retry button on the row. | The broker learns about the mismatch without checking any site, and can push the correct count from the sofa in one tap. |
 | #5 "Fix one listing from the sofa in under 20 seconds" | An Expo app: problems feed → listing → one-tap Retry, a price sheet (pre-filled, ±£1, Save), or delist behind a native confirmation. Every control is at least 44 points. | Treated as a timed script: open, tap the top row, Edit price, +£2, Save. See "Running the mobile app" for the run and the decision note in [`docs/mobile-adr.md`](docs/mobile-adr.md). |
 

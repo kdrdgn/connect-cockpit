@@ -6,7 +6,19 @@ import { registerTable } from "./focus";
 import { useUi } from "./store";
 import { harness } from "./testing";
 
-function Cells({ id, quantity, price, version = 1 }: { id: string; quantity: number; price: number; version?: number }) {
+function Cells({
+  id,
+  quantity,
+  price,
+  version = 1,
+  marketPrice,
+}: {
+  id: string;
+  quantity: number;
+  price: number;
+  version?: number;
+  marketPrice?: number;
+}) {
   return (
     <table>
       <tbody data-table-body>
@@ -15,7 +27,7 @@ function Cells({ id, quantity, price, version = 1 }: { id: string; quantity: num
             <EditCell id={id} index={0} field="quantity" value={quantity} version={version} label="Quantity" />
           </td>
           <td>
-            <EditCell id={id} index={0} field="price" value={price} version={version} label="Price" />
+            <EditCell id={id} index={0} field="price" value={price} version={version} label="Price" marketPrice={marketPrice} />
           </td>
         </tr>
       </tbody>
@@ -29,6 +41,40 @@ beforeEach(() => {
 });
 
 describe("EditCell", () => {
+  it("asks before saving a price far from market, and saves on the second Enter", async () => {
+    const h = await harness();
+    const l = h.listings[0]!;
+    render(<Cells id={l.id} quantity={l.quantity} price={l.price} version={l.version} marketPrice={l.marketPrice} />, {
+      wrapper: h.wrapper,
+    });
+    const user = userEvent.setup();
+    screen.getByRole("button", { name: /^Price/ }).focus();
+    const outlier = Math.round(l.marketPrice * 10);
+    await user.keyboard(`{Enter}{Control>}a{/Control}${outlier}{Enter}`);
+    expect(screen.getByRole("alert").textContent).toMatch(/× market .*Press Enter again to save/);
+    expect(h.writes()).toHaveLength(0);
+    await user.keyboard("{Enter}");
+    await waitFor(() => expect(h.writes()).toHaveLength(1));
+    expect(h.writes()[0]?.body).toMatchObject({ price: outlier });
+  });
+
+  it("never saves an unconfirmed outlying price when focus leaves the cell", async () => {
+    const h = await harness();
+    const l = h.listings[0]!;
+    render(
+      <>
+        <Cells id={l.id} quantity={l.quantity} price={l.price} version={l.version} marketPrice={l.marketPrice} />
+        <button type="button">elsewhere</button>
+      </>,
+      { wrapper: h.wrapper },
+    );
+    const user = userEvent.setup();
+    screen.getByRole("button", { name: /^Price/ }).focus();
+    await user.keyboard(`{Enter}{Control>}a{/Control}${Math.round(l.marketPrice * 10)}`);
+    await user.click(screen.getByRole("button", { name: "elsewhere" }));
+    expect(h.writes()).toHaveLength(0);
+  });
+
   it("rejects -1 as a quantity and sends nothing", async () => {
     const h = await harness();
     const l = h.listings[0]!;

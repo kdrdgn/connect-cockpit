@@ -2,7 +2,8 @@ import { useListings } from "@cockpit/client";
 import type { ListQueryInput } from "@cockpit/contract";
 import { useEffect, useMemo } from "react";
 
-export const PAGE_SIZE = 100;
+// The contract's maximum: 500 listings load in three requests, so the full problem count arrives sooner.
+export const PAGE_SIZE = 200;
 
 /**
  * The whole filtered view, loaded page by page in the background (design W5), so the problem count, n/N and

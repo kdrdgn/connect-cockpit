@@ -21,11 +21,6 @@
   background: var(--color-bg);
 }
 
-.button:disabled {
-  color: var(--color-ink-subtle);
-  cursor: default;
-}
-
 .primary {
   border-color: var(--color-accent);
   background: var(--color-accent);
@@ -46,4 +41,15 @@
   width: 28px;
   padding: 0;
   justify-content: center;
+}
+
+/* Last, so it wins over the variants: a disabled button reads as flat and unavailable, not just paler text. */
+.button:disabled {
+  color: var(--color-ink-subtle);
+  cursor: not-allowed;
+}
+
+.button:disabled:not(.ghost) {
+  border-color: var(--color-border);
+  background: var(--color-bg);
 }

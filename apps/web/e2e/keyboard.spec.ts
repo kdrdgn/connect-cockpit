@@ -33,9 +33,18 @@ test("arrow keys move between cells and rows", async ({ page }) => {
 test("skip link, / and ? work from the keyboard alone", async ({ page }) => {
   await page.goto("/?rate429=0&latency=0-20");
   await page.locator("tbody tr[data-id]").first().waitFor();
+  // In dev, the Next.js dev-tools button takes the first Tab stop; in a production build the skip links are first.
+  const toListings = page.getByRole("link", { name: "Skip to listings" });
+  for (let i = 0; i < 2 && !(await toListings.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press("Tab");
+  await expect(toListings).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator('tbody tr[data-index="0"] input[type=checkbox]')).toBeFocused();
+
+  // Start Tab from the top again.
+  await page.reload();
+  await page.locator("tbody tr[data-id]").first().waitFor();
   const skip = page.getByRole("link", { name: "Skip to bulk actions" });
-  // In dev, the Next.js dev-tools button takes the first Tab stop; in a production build the skip link is first.
-  for (let i = 0; i < 2 && !(await skip.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press("Tab");
+  for (let i = 0; i < 3 && !(await skip.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press("Tab");
   await expect(skip).toBeFocused();
   await expect(skip).toBeInViewport();
   await page.keyboard.press("Enter");

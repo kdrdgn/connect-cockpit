@@ -5,7 +5,7 @@ import { colIndex } from "./columns";
 import { parseEdit } from "./edit";
 import { useCommitEdit } from "./EditController";
 import { focusCell, neighbour } from "./focus";
-import { formatPrice } from "./price";
+import { formatPrice, priceWarning } from "./price";
 import { draftKey, type EditField, useIsEditing, useIsFlashing, useUi } from "./store";
 import styles from "./Table.module.css";
 
@@ -22,6 +22,7 @@ export function EditCell({
   value,
   version,
   label,
+  marketPrice,
 }: {
   id: string;
   index: number;
@@ -29,6 +30,8 @@ export function EditCell({
   value: number;
   version: number;
   label: string;
+  /** Price cells only: an edit far from market needs a second Enter. */
+  marketPrice?: number;
 }) {
   const editing = useIsEditing(id, field);
   const flashing = useIsFlashing(id, field);
@@ -44,7 +47,7 @@ export function EditCell({
   const col = colIndex(field);
 
   const cls = [styles.cellButton, saving && styles.saving, flashing && styles.rollback].filter(Boolean).join(" ");
-  if (editing) return <EditInput id={id} index={index} field={field} value={value} label={label} />;
+  if (editing) return <EditInput id={id} index={index} field={field} value={value} label={label} marketPrice={marketPrice} />;
   return (
     <button
       type="button"
@@ -68,7 +71,21 @@ export function EditCell({
   );
 }
 
-function EditInput({ id, index, field, value, label }: { id: string; index: number; field: EditField; value: number; label: string }) {
+function EditInput({
+  id,
+  index,
+  field,
+  value,
+  label,
+  marketPrice,
+}: {
+  id: string;
+  index: number;
+  field: EditField;
+  value: number;
+  label: string;
+  marketPrice?: number;
+}) {
   const draft = useUi((s) => s.drafts[draftKey(id, field)] ?? "");
   const select = useUi((s) => s.editing?.select ?? true);
   const baseVersion = useUi((s) => s.editing?.baseVersion);
@@ -76,6 +93,8 @@ function EditInput({ id, index, field, value, label }: { id: string; index: numb
   const endEdit = useUi((s) => s.endEdit);
   const commit = useCommitEdit();
   const [error, setError] = useState<string | null>(null);
+  /** An outlying price the broker has been warned about; the same value again saves it. */
+  const [warned, setWarned] = useState<{ value: number; message: string } | null>(null);
   const ref = useRef<HTMLInputElement>(null);
   const done = useRef(false);
   const errorId = useId();
@@ -89,6 +108,8 @@ function EditInput({ id, index, field, value, label }: { id: string; index: numb
     else el.setSelectionRange(el.value.length, el.value.length);
   }, [select]);
 
+  const outlier = (v: number) => (field === "price" && marketPrice ? priceWarning(v, marketPrice) : null);
+
   // Read at commit time, not from this render: a fast "3" + Tab can arrive before React re-renders.
   const currentDraft = () => useUi.getState().drafts[draftKey(id, field)] ?? "";
 
@@ -99,7 +120,13 @@ function EditInput({ id, index, field, value, label }: { id: string; index: numb
       setError(parsed.message);
       return false;
     }
-    if (parsed.value !== value) commit(id, field, parsed.value, baseVersion);
+    if (parsed.value === value) return true;
+    const warning = outlier(parsed.value);
+    if (warning && warned?.value !== parsed.value) {
+      setWarned({ value: parsed.value, message: warning });
+      return false;
+    }
+    commit(id, field, parsed.value, baseVersion);
     return true;
   };
 
@@ -131,7 +158,7 @@ function EditInput({ id, index, field, value, label }: { id: string; index: numb
         inputMode={field === "price" ? "decimal" : "numeric"}
         aria-label={`${label}, editing. Enter to save, Escape to cancel`}
         aria-invalid={error ? true : undefined}
-        aria-describedby={error ? errorId : undefined}
+        aria-describedby={error || warned ? errorId : undefined}
         value={draft}
         data-row={index}
         data-col={col}
@@ -139,21 +166,27 @@ function EditInput({ id, index, field, value, label }: { id: string; index: numb
         onChange={(e) => {
           setDraft(id, field, e.target.value);
           if (error) setError(null);
+          if (warned) setWarned(null);
         }}
         onKeyDown={onKeyDown}
         onBlur={() => {
           // Clicking away commits a valid change and drops an invalid one, like a spreadsheet.
+          // An outlying price is never saved by a click elsewhere: it needs the explicit second Enter.
           if (done.current) return;
           const parsed = parseEdit(field, currentDraft());
-          if (parsed.ok && parsed.value !== value) commit(id, field, parsed.value, baseVersion);
+          if (parsed.ok && parsed.value !== value && !outlier(parsed.value)) commit(id, field, parsed.value, baseVersion);
           leave(null);
         }}
       />
-      {error && (
+      {error ? (
         <span id={errorId} className={styles.editError} role="alert">
           {error}
         </span>
-      )}
+      ) : warned ? (
+        <span id={errorId} className={`${styles.editError} ${styles.editWarning}`} role="alert">
+          {warned.message}
+        </span>
+      ) : null}
     </span>
   );
 }

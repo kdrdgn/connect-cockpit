@@ -24,6 +24,17 @@
   background: var(--color-surface);
 }
 
+/* Narrow laptops: the status cluster takes its own line so the filters don't wrap into a tall stack. */
+@media (max-width: 1199px) {
+  .toolbar {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .status {
+    grid-column: 1 / -1;
+  }
+}
+
 .title {
   margin: 0 var(--space-2) 0 0;
   font-size: var(--text-lg-size);
@@ -79,28 +90,6 @@
   font-variant-numeric: var(--font-numeric);
 }
 
-/* Transient notices float over the table instead of taking toolbar space. */
-.notices {
-  position: absolute;
-  top: var(--space-1);
-  right: var(--space-4);
-  z-index: 4;
-  pointer-events: none;
-}
-
-.notices:empty {
-  display: none;
-}
-
-.notices > * {
-  display: inline-block;
-  padding: var(--space-1) var(--space-2);
-  border: 1px solid var(--color-attention);
-  border-radius: var(--radius-md);
-  background: var(--color-attention-bg);
-  pointer-events: auto;
-}
-
 .problems {
   display: inline-flex;
   align-items: center;
@@ -109,10 +98,33 @@
 
 .problemCount {
   min-width: 11ch;
+  height: 28px;
+  padding: 0 var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
   text-align: right;
   color: var(--color-attention);
+  font: inherit;
   font-weight: var(--weight-semibold);
   font-variant-numeric: var(--font-numeric);
+  cursor: pointer;
+}
+
+.problemCount:hover {
+  border-color: var(--color-border-strong);
+}
+
+/* "Problems only" is on. */
+.problemCount.pressed {
+  border-color: var(--color-attention);
+  background: var(--color-attention-bg);
+}
+
+/* Counting, or no problems: same width as the number, without the attention colour. */
+.quiet {
+  color: var(--color-ink-muted);
+  font-weight: var(--weight-regular);
 }
 
 .kbd {
@@ -165,12 +177,6 @@
   display: none;
 }
 
-.waiting {
-  color: var(--color-attention);
-  font-weight: var(--weight-medium);
-  font-variant-numeric: var(--font-numeric);
-}
-
 .message {
   display: grid;
   justify-items: center;
@@ -199,4 +205,24 @@
   align-items: center;
   gap: var(--space-2);
   margin-left: auto;
+}
+
+/* Sync glyph key, in the idle bulk bar where there's room. */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-4);
+  margin: 0 0 0 auto;
+  padding: 0;
+  list-style: none;
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs-size);
+  line-height: var(--text-xs-line);
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
 }

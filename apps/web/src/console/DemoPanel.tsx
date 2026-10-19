@@ -1,5 +1,6 @@
 "use client";
 
+import { describeChaos } from "@cockpit/mock";
 import { useState } from "react";
 import { getMockEngine } from "@/mock/MockProvider";
 import { Button } from "@/ui/Button";
@@ -22,6 +23,9 @@ export default function DemoPanel({ onDrift }: { onDrift: () => void }) {
         <section className={styles.panel} aria-label="Demo controls">
           <h2 className={styles.title}>Demo controls</h2>
           <p className={styles.note}>These change the mock API in this tab, not any real marketplace.</p>
+          <p className={styles.note} aria-live="polite">
+            Now: {describeChaos(engine.config)}
+          </p>
           <label className={styles.row}>
             <input
               type="checkbox"

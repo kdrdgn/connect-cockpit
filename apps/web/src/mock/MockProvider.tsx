@@ -1,6 +1,7 @@
 "use client";
 
-import { type Engine, createEngine, parseChaos } from "@cockpit/mock";
+import { type Engine, createEngine, describeChaos, parseChaosParams } from "@cockpit/mock";
+import { useToasts } from "@/ui/Toast";
 import { type ReactNode, useEffect, useState } from "react";
 
 let engine: Engine | null = null;
@@ -10,8 +11,20 @@ let ready: Promise<unknown> | null = null;
 function startMock(): Promise<unknown> {
   if (!ready) {
     ready = import("@cockpit/mock/msw").then(({ startMockWorker }) => {
-      engine = createEngine({ config: parseChaos(new URLSearchParams(window.location.search)) });
+      const { config, ignored } = parseChaosParams(new URLSearchParams(window.location.search));
+      engine = createEngine({ config });
       engine.start();
+      // Say what the mock is doing, so a URL param that didn't take is visible rather than a silent default.
+      console.info(`[mock] ${describeChaos(engine.config)}`);
+      for (const p of ignored) {
+        console.warn(`[mock] ignored ${p.key}=${p.value}: ${p.reason}. Using ${p.using}.`);
+        useToasts.getState().show({
+          id: `mock-param:${p.key}`,
+          tone: "attention",
+          title: `Mock setting ignored: ${p.key}=${p.value}`,
+          body: `${p.reason[0]!.toUpperCase()}${p.reason.slice(1)}. Using ${p.using}.`,
+        });
+      }
       return startMockWorker(engine);
     });
   }

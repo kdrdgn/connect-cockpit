@@ -9,7 +9,7 @@ export function PriceGap({ price, marketPrice }: { price: number; marketPrice: n
       <svg className={styles.glyph} viewBox="0 0 8 8" aria-hidden="true" focusable="false">
         {g.direction === "up" && <path d="M4 1l3.5 5h-7z" fill="currentColor" />}
         {g.direction === "down" && <path d="M4 7L.5 2h7z" fill="currentColor" />}
-        {g.direction === "flat" && <circle cx="4" cy="4" r="1.5" fill="currentColor" />}
+        {g.direction === "flat" && <circle cx="4" cy="4" r="1.25" fill="currentColor" />}
       </svg>
       <span aria-hidden="true">{g.text}</span>
       <span className="srOnly">{g.label}</span>

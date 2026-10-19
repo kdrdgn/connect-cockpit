@@ -23,26 +23,68 @@ export const DEFAULT_CHAOS: Omit<ChaosConfig, "seed"> = {
 
 export const CHAOS_OFF = { latency: [0, 20] as const, failRate: 0, rate429: 0 };
 
-/** Reads chaos settings from URL params, e.g. `?chaos=off&seed=42&latency=0-50&failRate=50&rate429=0`. */
-export function parseChaos(params: URLSearchParams): ChaosConfig {
-  const int = (key: string) => {
-    const raw = params.get(key);
-    const n = raw === null ? NaN : Number(raw);
-    return Number.isInteger(n) && n >= 0 ? n : undefined;
-  };
-  const chaos = params.get("chaos") !== "off";
+/** A URL value the mock couldn't use, with what it used instead. */
+export type IgnoredParam = { key: string; value: string; reason: string; using: string };
+
+/**
+ * Reads chaos settings from URL params, e.g. `?chaos=off&seed=42&latency=0-50&failRate=50&rate429=0`, and
+ * reports every value it had to ignore, so a typo like `failRate=50%` is visible instead of silently defaulted.
+ */
+export function parseChaosParams(params: URLSearchParams): { config: ChaosConfig; ignored: IgnoredParam[] } {
+  const ignored: IgnoredParam[] = [];
+  const chaosRaw = params.get("chaos");
+  if (chaosRaw !== null && chaosRaw !== "on" && chaosRaw !== "off") {
+    ignored.push({ key: "chaos", value: chaosRaw, reason: "use on or off", using: "on" });
+  }
+  const chaos = chaosRaw !== "off";
   const base = chaos ? DEFAULT_CHAOS : { ...DEFAULT_CHAOS, ...CHAOS_OFF };
-  const [lo, hi] = (params.get("latency") ?? "").split("-").map(Number);
-  const latency: readonly [number, number] =
-    Number.isFinite(lo) && Number.isFinite(hi) && lo! >= 0 && hi! >= lo! ? [lo!, hi!] : base.latency;
-  return {
-    chaos,
-    seed: int("seed") ?? Math.floor(Math.random() * 2 ** 31),
-    dataSeed: int("dataSeed") ?? base.dataSeed,
-    latency,
-    failRate: Math.min(100, int("failRate") ?? base.failRate),
-    rate429: Math.min(100, int("rate429") ?? base.rate429),
+
+  const int = (key: string, max: number, fallback: number | string): number | undefined => {
+    const raw = params.get(key);
+    if (raw === null) return undefined;
+    const n = Number(raw);
+    if (raw.trim() !== "" && Number.isInteger(n) && n >= 0 && n <= max) return n;
+    const range = max === Number.MAX_SAFE_INTEGER ? "a whole number, 0 or more" : `a whole number from 0 to ${max}`;
+    ignored.push({ key, value: raw, reason: `use ${range}`, using: String(fallback) });
+    return undefined;
   };
+
+  const latencyRaw = params.get("latency");
+  let latency: readonly [number, number] = base.latency;
+  if (latencyRaw !== null) {
+    const m = /^(\d+)-(\d+)$/.exec(latencyRaw.trim());
+    const [lo, hi] = m ? [Number(m[1]), Number(m[2])] : [NaN, NaN];
+    if (m && hi >= lo) latency = [lo, hi];
+    else ignored.push({ key: "latency", value: latencyRaw, reason: "use min-max in ms, like 0-50", using: `${base.latency[0]}-${base.latency[1]}` });
+  }
+
+  const config: ChaosConfig = {
+    chaos,
+    seed: int("seed", Number.MAX_SAFE_INTEGER, "random") ?? Math.floor(Math.random() * 2 ** 31),
+    dataSeed: int("dataSeed", Number.MAX_SAFE_INTEGER, base.dataSeed) ?? base.dataSeed,
+    latency,
+    failRate: int("failRate", 100, base.failRate) ?? base.failRate,
+    rate429: int("rate429", 100, base.rate429) ?? base.rate429,
+  };
+  return { config, ignored };
+}
+
+export function parseChaos(params: URLSearchParams): ChaosConfig {
+  return parseChaosParams(params).config;
+}
+
+/** The active settings in words, e.g. "latency 300–800 ms · writes fail 15% · 429 on 5% of reads · write seed 42". */
+export function describeChaos(c: ChaosConfig): string {
+  return [
+    c.chaos ? null : "chaos off",
+    `latency ${c.latency[0]}–${c.latency[1]} ms`,
+    `writes fail ${c.failRate}%`,
+    `429 on ${c.rate429}% of reads`,
+    `write seed ${c.seed}`,
+    `data seed ${c.dataSeed}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 /**

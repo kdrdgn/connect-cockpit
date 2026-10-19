@@ -1,5 +1,6 @@
-import { useListing } from "@cockpit/client";
+import { keys, useListing } from "@cockpit/client";
 import { MARKETPLACES, type Listing, problemsOf } from "@cockpit/contract";
+import { skipToken, useQuery } from "@tanstack/react-query";
 import { memo } from "react";
 import { PriceGap } from "./PriceGap";
 import { SyncGlyph } from "./SyncGlyph";
@@ -14,6 +15,22 @@ import { useNow } from "./useNow";
 
 const hasPending = (l: Listing) => MARKETPLACES.some((m) => l.sync[m].state === "pending");
 
+const eventKey = (l: Listing) => `${l.event}|${l.date}`;
+
+/**
+ * The event and date of the row above, so a run of rows for the same event can show its name once and mute the
+ * repeats. Selects just that string, so drift on the neighbour's prices or sync never re-renders this row.
+ */
+function usePreviousEventKey(previousId: string | undefined): string | undefined {
+  return useQuery({
+    queryKey: keys.listing(previousId ?? ""),
+    queryFn: skipToken,
+    staleTime: Infinity,
+    enabled: previousId !== undefined,
+    select: (l: Listing) => eventKey(l),
+  }).data;
+}
+
 /** One listing. Subscribes to its own cache entry and selection bit, so drift on another row never renders this one. */
 export const Row = memo(function Row({ id, index }: { id: string; index: number }) {
   const listing = useListing(id);
@@ -21,6 +38,7 @@ export const Row = memo(function Row({ id, index }: { id: string; index: number 
   const viewIds = useViewIds();
   const bulkFailed = useBulkFailed(id);
   const open = useUi((s) => s.drawerId === id);
+  const previousEvent = usePreviousEventKey(index > 0 ? viewIds[index - 1] : undefined);
   // Only rows with a pending marketplace need the clock, to notice when pending turns stale.
   const now = useNow(listing ? hasPending(listing) : false);
   if (!listing) return <PlaceholderRow index={index} />;
@@ -54,7 +72,7 @@ export const Row = memo(function Row({ id, index }: { id: string; index: number 
           data-col={colIndex("select")}
         />
       </td>
-      <td className={styles.event} title={listing.event}>
+      <td className={previousEvent === eventKey(listing) ? `${styles.event} ${styles.repeat}` : styles.event} title={listing.event}>
         {listing.event}
         {problems > 0 && <span className={styles.srOnly}>{`, ${problems} problem${problems === 1 ? "" : "s"}`}</span>}
         {bulkFailed && <span className={styles.srOnly}>, last bulk change failed</span>}
@@ -68,7 +86,15 @@ export const Row = memo(function Row({ id, index }: { id: string; index: number 
         <EditCell id={id} index={index} field="quantity" value={listing.quantity} version={listing.version} label="Quantity" />
       </td>
       <td className={`${styles.num} ${styles.editCell}`}>
-        <EditCell id={id} index={index} field="price" value={listing.price} version={listing.version} label="Price" />
+        <EditCell
+          id={id}
+          index={index}
+          field="price"
+          value={listing.price}
+          version={listing.version}
+          label="Price"
+          marketPrice={listing.marketPrice}
+        />
       </td>
       <td className={styles.num}>
         <PriceGap price={listing.price} marketPrice={listing.marketPrice} />

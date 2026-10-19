@@ -2,6 +2,7 @@ import { Button } from "@/ui/Button";
 import { BulkControls, LastBulkActions, resultSummary } from "./BulkActions";
 import styles from "./Console.module.css";
 import { useUi } from "./store";
+import { SyncLegend } from "./SyncLegend";
 import type { useBulkFlow } from "./useBulkFlow";
 
 export function BulkBar({ flow }: { flow: ReturnType<typeof useBulkFlow> }) {
@@ -11,7 +12,11 @@ export function BulkBar({ flow }: { flow: ReturnType<typeof useBulkFlow> }) {
   return (
     <section id="bulk-actions" className={`${styles.bulk} ${styles.bulkBar}`} tabIndex={-1} aria-label="Bulk actions">
       {count === 0 ? (
-        <span>Select rows to change price or delist.</span>
+        <>
+          <span>Select rows to change price or delist.</span>
+          {/* The last bulk change's undo takes this space when there is one. */}
+          {!last && <SyncLegend />}
+        </>
       ) : (
         <>
           <strong className={styles.selectedCount} aria-live="polite">

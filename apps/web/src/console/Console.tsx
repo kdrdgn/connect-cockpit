@@ -14,12 +14,12 @@ import { DensityToggle, useDensity } from "./DensityToggle";
 import { Drawer } from "./Drawer";
 import { EditController } from "./EditController";
 import { FilterBar, type OpenPanel } from "./FilterBar";
+import { focusCell } from "./focus";
 import { CLEARED_FILTERS, DEFAULT_SORT, useFilters } from "./filters";
 import { HeaderRow } from "./Header";
 import { LiveIndicator } from "./LiveIndicator";
 import { jumpToProblem, ProblemNav } from "./ProblemNav";
 import { useProblemOrder } from "./problems";
-import { RateLimitNotice } from "./RateLimit";
 import { SeatingMap } from "./SeatingMap";
 import { SelectAll } from "./SelectAll";
 import { ViewIdsContext } from "./selection";
@@ -112,6 +112,17 @@ export function Console() {
     <EditController>
       <ViewIdsContext.Provider value={view.loadedIds}>
         <div className={styles.console}>
+          <a
+            className={styles.skip}
+            href="#listings"
+            onClick={(e) => {
+              // Straight to the first row's checkbox, past the toolbar and the sort headers.
+              e.preventDefault();
+              void focusCell(0, 0);
+            }}
+          >
+            Skip to listings
+          </a>
           <a className={styles.skip} href="#bulk-actions">
             Skip to bulk actions
           </a>
@@ -119,9 +130,15 @@ export function Console() {
             <h1 className={styles.title}>Listings</h1>
             <FilterBar values={values} setValues={setValues} open={panel} onOpen={setPanel} />
             <div className={styles.status}>
-              <ProblemNav order={problems.order} indexOf={problems.indexOf} loading={view.isPending} />
+              <ProblemNav
+                order={problems.order}
+                indexOf={problems.indexOf}
+                counting={!view.isComplete}
+                onlyProblems={values.problem === "any"}
+                onToggleOnly={() => void setValues({ problem: values.problem === "any" ? null : "any" })}
+              />
               <span className={styles.count}>{view.isPending ? "Loading…" : `${view.total} listings`}</span>
-              <LiveIndicator status={live.status} />
+              <LiveIndicator status={live.status} started={view.changesCursor !== undefined} />
               <DensityToggle />
               <Button variant="ghost" aria-keyshortcuts="?" onClick={() => setHelpOpen(true)}>
                 Shortcuts <kbd className={styles.kbd}>?</kbd>
@@ -131,10 +148,7 @@ export function Console() {
           <div className={styles.chips}>
             <Chips values={values} setValues={setValues} />
           </div>
-          <main className={styles.tableArea}>
-            <div className={styles.notices}>
-              <RateLimitNotice />
-            </div>
+          <main id="listings" className={styles.tableArea}>
             <Table
               ids={view.ids}
               total={view.total}
@@ -159,6 +173,7 @@ export function Console() {
             ) : (
               <SeatingMap
                 loadedIds={view.loadedIds}
+                counting={!view.isComplete}
                 activeSection={values.section}
                 onToggleSection={(section) => void setValues({ section: values.section === section ? null : section })}
               />
