@@ -51,6 +51,8 @@ The mock engine is reached three ways with identical behaviour: MSW in the brows
 
 Packages ship TypeScript source with no build step: Next uses `transpilePackages`, and Metro compiles TS itself.
 
+The API the backend should provide is in [`docs/api-wishlist.md`](docs/api-wishlist.md): eight asks, each one already implemented by the mock unless marked otherwise.
+
 ## Web console
 
 ### Choices, and why
@@ -174,7 +176,7 @@ Passing against the mock only proves the pipeline. The mock is keyword rules ove
 - **AI on the phone.** The phone has no server to call, and the 20-second fix doesn't need it.
 - **Phone and web sharing state.** Each runs its own copy of the mock, so an edit on the phone doesn't appear on the web.
 - **React Native component tests.** The feed logic (ranking, wording, which marketplaces can be retried) is unit-tested in Vitest. The screens were checked by hand on a phone.
-- **Go mock service (Track D2).** Cut to protect Track A; the mock is TypeScript only. I would rather make the Go change together in the demo, where how I read and steer the diff is visible, than ship ~150 lines I could not defend line by line. <!-- TODO(author): state your actual Go experience here in one honest line. -->
+- **Go mock service (Track D2).** Cut to protect Track A; the mock is TypeScript only. What the Go service should implement is written up in [`docs/api-wishlist.md`](docs/api-wishlist.md) instead. I would rather make the Go change together in the demo, where how I read and steer the diff is visible, than ship ~150 lines I could not defend line by line. <!-- TODO(author): state your actual Go experience here in one honest line. -->
 
 ## Running the mobile app
 
