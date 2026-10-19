@@ -1,5 +1,13 @@
-import type { ListQueryInput, Listing, Marketplace, PatchBody, SyncEntry } from "@cockpit/contract";
-import type { MutationOptions, QueryClient } from "@tanstack/react-query";
+import {
+  type ExplainResponse,
+  type ListQueryInput,
+  type Listing,
+  type Marketplace,
+  type PatchBody,
+  type SyncEntry,
+  toExplainRequest,
+} from "@cockpit/contract";
+import { type MutationOptions, type QueryClient, type QueryObserverOptions, skipToken } from "@tanstack/react-query";
 import { ApiError, type Client } from "./client";
 
 // "Option Y": lists hold ids only; each listing lives in its own entry, so one change re-renders one row.
@@ -7,6 +15,8 @@ export const keys = {
   listings: (filters: ListQueryInput) => ["listings", filters] as const,
   listing: (id: string) => ["listing", id] as const,
   history: (id: string) => ["history", id] as const,
+  /** By marketplace and error text, not listing: the same error on another listing reuses the answer. */
+  explain: (marketplace: Marketplace, lastError: string) => ["explain", marketplace, lastError] as const,
 };
 
 export type ListingsPage = { ids: string[]; total: number; nextCursor: string | null; changesCursor: string };
@@ -127,5 +137,17 @@ export function retrySyncMutationOptions(
       putListing(qc, listing);
       void qc.invalidateQueries({ queryKey: keys.history(listing.id) });
     },
+  };
+}
+
+export function explainQueryOptions(client: Client, listing: Listing, marketplace: Marketplace): QueryObserverOptions<ExplainResponse> {
+  const body = toExplainRequest(listing, marketplace);
+  return {
+    queryKey: keys.explain(marketplace, body?.lastError ?? ""),
+    // No abort on unmount: a closed drawer's answer still lands in the cache, and StrictMode's
+    // remount reuses the request instead of paying for a second model call. The 6 s timeout still applies.
+    queryFn: body ? () => client.explainSync(body) : skipToken,
+    staleTime: Infinity,
+    retry: 0,
   };
 }

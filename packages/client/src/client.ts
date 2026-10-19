@@ -5,6 +5,8 @@ import {
   ChangesResponse,
   type ErrorCode,
   ErrorEnvelope,
+  type ExplainRequest,
+  ExplainResponse,
   HistoryResponse,
   IDEMPOTENCY_HEADER,
   Listing,
@@ -46,6 +48,9 @@ export type ClientOptions = {
 };
 
 export type Client = ReturnType<typeof createClient>;
+
+/** The explanation gives up after this; the drawer then shows "No suggestion" and the manual actions. */
+export const EXPLAIN_TIMEOUT_MS = 6_000;
 
 const internal = (message: string, status = 0) =>
   new ApiError({ code: "INTERNAL", message, retryable: false }, status);
@@ -134,6 +139,25 @@ export function createClient(options: ClientOptions) {
       send(BulkResponse, "/listings/bulk", json("POST", { ops }, { [IDEMPOTENCY_HEADER]: idempotencyKey }), "write"),
     retrySync: (id: string, marketplace: Marketplace) =>
       send(Listing, `/listings/${encodeURIComponent(id)}/retry-sync`, json("POST", { marketplace }), "write"),
+    /**
+     * The AI explanation of one marketplace error. Failed answers (504, 502) carry an ExplainResponse
+     * too, so any parseable body resolves; only a network error, an abort or a garbled body rejects.
+     */
+    explainSync: async (body: ExplainRequest, signal?: AbortSignal): Promise<ExplainResponse> => {
+      const controller = new AbortController();
+      const abort = () => controller.abort(signal?.reason);
+      signal?.addEventListener("abort", abort);
+      const timer = setTimeout(() => controller.abort(new Error("Explanation timed out")), EXPLAIN_TIMEOUT_MS);
+      try {
+        const res = await fetch(`${baseUrl}/ai/explain-sync`, { ...json("POST", body), signal: controller.signal });
+        const parsed = ExplainResponse.safeParse(await res.json().catch(() => null));
+        if (!parsed.success) throw internal(`Unexpected ${res.status} response from the explain route`, res.status);
+        return parsed.data;
+      } finally {
+        clearTimeout(timer);
+        signal?.removeEventListener("abort", abort);
+      }
+    },
     rateLimitedUntil: () => rateLimitedUntil,
     onRateLimit: (listener: RateLimitListener) => {
       listeners.add(listener);

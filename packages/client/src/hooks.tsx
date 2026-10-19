@@ -1,4 +1,10 @@
-import type { BulkOp, HistoryEntry, ListQueryInput, Listing } from "@cockpit/contract";
+import {
+  type BulkOp,
+  type HistoryEntry,
+  type ListQueryInput,
+  type Listing,
+  type Marketplace,
+} from "@cockpit/contract";
 import {
   keepPreviousData,
   skipToken,
@@ -10,7 +16,7 @@ import {
 import { type ReactNode, createContext, useContext } from "react";
 import type { Client } from "./client";
 import { applyBulkResults } from "./bulk";
-import { fetchListingsPage, keys, patchMutationOptions, retrySyncMutationOptions } from "./cache";
+import { explainQueryOptions, fetchListingsPage, keys, patchMutationOptions, retrySyncMutationOptions } from "./cache";
 
 const ClientContext = createContext<Client | null>(null);
 
@@ -80,4 +86,12 @@ export function useRetrySync() {
   const qc = useQueryClient();
   const client = useClient();
   return useMutation(retrySyncMutationOptions(qc, client));
+}
+
+/**
+ * The AI explanation for one errored marketplace. Requests only while that marketplace is in error,
+ * never retries by itself (the drawer's "Try again" refetches) and keeps an answer for the session.
+ */
+export function useExplainSync(listing: Listing, marketplace: Marketplace) {
+  return useQuery(explainQueryOptions(useClient(), listing, marketplace));
 }

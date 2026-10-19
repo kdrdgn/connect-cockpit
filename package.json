@@ -11,7 +11,8 @@
     "dev:mobile": "pnpm --filter mobile start",
     "test": "vitest run",
     "typecheck": "pnpm -r typecheck",
-    "e2e": "pnpm --filter web e2e"
+    "e2e": "pnpm --filter web e2e",
+    "eval": "pnpm --filter web eval"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",

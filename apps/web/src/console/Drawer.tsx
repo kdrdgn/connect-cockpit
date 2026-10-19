@@ -5,6 +5,7 @@ import { Button, IconButton } from "@/ui/Button";
 import { useToasts } from "@/ui/Toast";
 import { colIndex } from "./columns";
 import styles from "./Drawer.module.css";
+import { ExplainPanel } from "./ExplainPanel";
 import { STATE_NAME } from "./FilterBar";
 import { focusCell } from "./focus";
 import { formatDateLong } from "./format";
@@ -24,14 +25,6 @@ const KIND_WORD = {
 } as const;
 
 const ago = (iso: string, now: number) => `${formatDuration(now - Date.parse(iso))} ago`;
-
-/**
- * Where an explanation and a suggested fix for one marketplace's error will go (filled by ai-sync-explain).
- * Renders nothing for now, so the manual actions below stand on their own.
- */
-export function ExplainSlot(_props: { listing: Listing; marketplace: Marketplace }) {
-  return null;
-}
 
 export function Drawer({ id, returnTo }: { id: string; returnTo: { row: number; col: number } | null }) {
   const listing = useListing(id);
@@ -114,6 +107,13 @@ function MarketplaceSection({
       { onError: (e) => toast({ id: `retry:${listing.id}:${marketplace}`, tone: "danger", title: `${name}: retry failed`, body: e.message }) },
     );
 
+  const editPrice = (initial: string) => {
+    if (!returnTo) return;
+    void focusCell(returnTo.row, colIndex("price")).then((ok) => {
+      if (ok) useUi.getState().startEdit(listing.id, "price", initial, listing.version);
+    });
+  };
+
   const doDelist = async () => {
     setConfirmDelist(false);
     try {
@@ -143,7 +143,15 @@ function MarketplaceSection({
           : ""}
       </p>
       {entry.state === "error" && entry.lastError && <p className={styles.error}>{entry.lastError}</p>}
-      {entry.state === "error" && <ExplainSlot listing={listing} marketplace={marketplace} />}
+      {entry.state === "error" && (
+        <ExplainPanel
+          listing={listing}
+          marketplace={marketplace}
+          onRetry={doRetry}
+          onEditPrice={editPrice}
+          onDelist={() => setConfirmDelist(true)}
+        />
+      )}
       <div className={styles.actions}>
         {canRetry && (
           <Button onClick={doRetry} disabled={retry.isPending}>
@@ -151,15 +159,7 @@ function MarketplaceSection({
           </Button>
         )}
         {entry.state === "error" && (
-          <Button
-            variant="ghost"
-            onClick={() => {
-              if (!returnTo) return;
-              void focusCell(returnTo.row, colIndex("price")).then((ok) => {
-                if (ok) useUi.getState().startEdit(listing.id, "price", String(listing.price), listing.version);
-              });
-            }}
-          >
+          <Button variant="ghost" onClick={() => editPrice(String(listing.price))}>
             Edit price
           </Button>
         )}

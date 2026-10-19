@@ -38,3 +38,16 @@ export function clampSuggestion(suggested: number, marketPrice: number): number 
   const max = marketPrice * (1 + SUGGESTION_CLAMP);
   return Math.round(Math.min(max, Math.max(min, suggested)) * 100) / 100;
 }
+
+/**
+ * The price behind an "adjust price" suggestion. The floor is read from untrusted error
+ * text, so it's only a hint: the higher of it and 95% of market, whole pounds, then clamped.
+ */
+export function suggestPrice({ floor, marketPrice }: { floor?: number; marketPrice: number }): {
+  price: number;
+  capped: boolean;
+} {
+  const wanted = Math.ceil(Math.max(floor ?? 0, marketPrice * 0.95));
+  const price = clampSuggestion(wanted, marketPrice);
+  return { price, capped: price !== wanted };
+}
