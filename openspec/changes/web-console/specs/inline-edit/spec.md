@@ -17,8 +17,8 @@ The price and quantity cells SHALL be focusable controls. Pressing Enter or F2, 
 In edit mode, Enter SHALL commit and keep focus on the same cell. Escape SHALL cancel, restore the value and keep focus on the cell. Tab SHALL commit, leave edit mode and move focus to the next interactive cell to the right. Shift+Tab SHALL do the same to the left. Committing an unchanged value SHALL NOT send a write.
 
 #### Scenario: Tab moves on
-- **WHEN** the broker types 130 in a price cell and presses Tab
-- **THEN** the write is sent, the cell shows £130, and focus is on the quantity cell in navigation mode
+- **WHEN** the broker types 3 in a quantity cell and presses Tab
+- **THEN** the write is sent, the cell shows 3, and focus is on the same row's price cell (the next cell to the right) in navigation mode
 
 #### Scenario: Escape cancels
 - **WHEN** the broker types 130 and presses Escape

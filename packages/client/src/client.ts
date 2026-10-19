@@ -82,6 +82,7 @@ export function createClient(options: ClientOptions) {
     path: string,
     init: RequestInit,
     kind: "read" | "write",
+    retryRateLimit = true,
   ): Promise<z.infer<S>> {
     for (let attempt = 0; ; attempt++) {
       let res: Response;
@@ -96,7 +97,7 @@ export function createClient(options: ClientOptions) {
       if (!res.ok) {
         const parsed = ErrorEnvelope.safeParse(body);
         const env = parsed.success ? parsed.data : null;
-        if (res.status === 429 && kind === "read" && attempt < maxReadRetries) {
+        if (res.status === 429 && kind === "read" && retryRateLimit && attempt < maxReadRetries) {
           const wait = retryAfterMs(res, env);
           setRateLimit(now() + wait);
           await sleep(wait, init.signal ?? undefined);
@@ -122,8 +123,9 @@ export function createClient(options: ClientOptions) {
   return {
     listListings: (query: ListQueryInput, signal?: AbortSignal) =>
       send(ListResponse, `/listings?${toSearchParams(query).toString()}`, { signal }, "read"),
-    getChanges: (since: string, signal?: AbortSignal) =>
-      send(ChangesResponse, `/listings/changes?since=${encodeURIComponent(since)}`, { signal }, "read"),
+    /** `retryRateLimit: false` lets a background poll handle its own 429 quietly instead of waiting here. */
+    getChanges: (since: string, signal?: AbortSignal, opts: { retryRateLimit?: boolean } = {}) =>
+      send(ChangesResponse, `/listings/changes?since=${encodeURIComponent(since)}`, { signal }, "read", opts.retryRateLimit),
     getHistory: (id: string, signal?: AbortSignal) =>
       send(HistoryResponse, `/listings/${encodeURIComponent(id)}/history`, { signal }, "read"),
     patchListing: (id: string, body: PatchBody) =>

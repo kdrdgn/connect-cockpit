@@ -1,0 +1,16 @@
+.glyph {
+  display: block;
+  width: 14px;
+  height: 14px;
+  color: var(--color-ink);
+}
+
+.live,
+.pending,
+.not_listed {
+  color: var(--color-ink-subtle);
+}
+
+.attention {
+  color: var(--color-attention);
+}

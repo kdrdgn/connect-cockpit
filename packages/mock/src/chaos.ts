@@ -21,7 +21,7 @@ export const DEFAULT_CHAOS: Omit<ChaosConfig, "seed"> = {
   rate429: 5,
 };
 
-const OFF = { latency: [0, 20], failRate: 0, rate429: 0 } as const;
+export const CHAOS_OFF = { latency: [0, 20] as const, failRate: 0, rate429: 0 };
 
 /** Reads chaos settings from URL params, e.g. `?chaos=off&seed=42&latency=0-50&failRate=50&rate429=0`. */
 export function parseChaos(params: URLSearchParams): ChaosConfig {
@@ -31,7 +31,7 @@ export function parseChaos(params: URLSearchParams): ChaosConfig {
     return Number.isInteger(n) && n >= 0 ? n : undefined;
   };
   const chaos = params.get("chaos") !== "off";
-  const base = chaos ? DEFAULT_CHAOS : { ...DEFAULT_CHAOS, ...OFF };
+  const base = chaos ? DEFAULT_CHAOS : { ...DEFAULT_CHAOS, ...CHAOS_OFF };
   const [lo, hi] = (params.get("latency") ?? "").split("-").map(Number);
   const latency: readonly [number, number] =
     Number.isFinite(lo) && Number.isFinite(hi) && lo! >= 0 && hi! >= lo! ? [lo!, hi!] : base.latency;

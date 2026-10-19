@@ -1,0 +1,202 @@
+.console {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "toolbar toolbar"
+    "chips side"
+    "table side"
+    "bulk side";
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* Title | filters (wrap inside their own column) | status (never wraps). Everything is present from the first
+   paint with stable widths, so nothing reflows when data arrives. */
+.toolbar {
+  grid-area: toolbar;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.title {
+  margin: 0 var(--space-2) 0 0;
+  font-size: var(--text-lg-size);
+  line-height: var(--text-lg-line);
+  font-weight: var(--weight-semibold);
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  white-space: nowrap;
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm-size);
+  line-height: var(--text-sm-line);
+}
+
+.chips {
+  grid-area: chips;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  padding: var(--space-2) var(--space-4);
+}
+
+.tableArea {
+  position: relative;
+  grid-area: table;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.side {
+  grid-area: side;
+  width: auto;
+  max-width: 360px;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  border-left: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.bulk {
+  grid-area: bulk;
+}
+
+.count {
+  min-width: 10ch;
+  font-variant-numeric: var(--font-numeric);
+}
+
+/* Transient notices float over the table instead of taking toolbar space. */
+.notices {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-4);
+  z-index: 4;
+  pointer-events: none;
+}
+
+.notices:empty {
+  display: none;
+}
+
+.notices > * {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-attention);
+  border-radius: var(--radius-md);
+  background: var(--color-attention-bg);
+  pointer-events: auto;
+}
+
+.problems {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.problemCount {
+  min-width: 11ch;
+  text-align: right;
+  color: var(--color-attention);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: var(--font-numeric);
+}
+
+.kbd {
+  padding: 0 var(--space-1);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-ink-muted);
+  font: inherit;
+  font-size: var(--text-xs-size);
+  line-height: var(--text-xs-line);
+}
+
+.skip {
+  position: absolute;
+  left: var(--space-4);
+  top: var(--space-2);
+  z-index: 30;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-accent);
+  color: var(--color-surface);
+  font-weight: var(--weight-medium);
+  transform: translateY(-200%);
+}
+
+.skip:focus {
+  transform: none;
+}
+
+.bulkBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  white-space: nowrap;
+  min-height: 48px;
+  padding: var(--space-2) var(--space-4);
+  border-top: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm-size);
+}
+
+.bulkBar:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.chips:empty {
+  display: none;
+}
+
+.waiting {
+  color: var(--color-attention);
+  font-weight: var(--weight-medium);
+  font-variant-numeric: var(--font-numeric);
+}
+
+.message {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  padding: var(--space-12) var(--space-4);
+  color: var(--color-ink-muted);
+  font-size: var(--text-md-size);
+  line-height: var(--text-md-line);
+  text-align: center;
+  white-space: normal;
+}
+
+.messageTitle {
+  color: var(--color-ink);
+  font-weight: var(--weight-semibold);
+}
+
+.selectedCount {
+  color: var(--color-ink);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: var(--font-numeric);
+}
+
+.lastBulk {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}

@@ -1,0 +1,127 @@
+.drawer {
+  display: flex;
+  flex-direction: column;
+  width: 340px;
+  height: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--text-lg-size);
+  line-height: var(--text-lg-line);
+  font-weight: var(--weight-semibold);
+}
+
+.title:focus {
+  outline: none;
+}
+
+.title:focus-visible {
+  outline: 2px solid var(--color-accent);
+}
+
+.meta {
+  margin: var(--space-1) 0 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm-size);
+  line-height: var(--text-sm-line);
+  font-variant-numeric: var(--font-numeric);
+}
+
+.body {
+  flex: 1;
+  overflow: auto;
+}
+
+.section {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mpName {
+  font-weight: var(--weight-semibold);
+}
+
+.state {
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm-size);
+}
+
+.when {
+  margin: var(--space-1) 0 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm-size);
+  line-height: var(--text-sm-line);
+}
+
+.error {
+  margin: var(--space-2) 0 0;
+  padding: var(--space-2);
+  border-left: 3px solid var(--color-attention);
+  background: var(--color-attention-bg);
+  font-size: var(--text-sm-size);
+  line-height: var(--text-sm-line);
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.actions:empty {
+  display: none;
+}
+
+.subTitle {
+  margin: 0 0 var(--space-2);
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs-size);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.history {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm-size);
+  line-height: var(--text-sm-line);
+}
+
+.history li {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: var(--space-2);
+}
+
+.histWhen {
+  color: var(--color-ink-subtle);
+  font-variant-numeric: var(--font-numeric);
+}
+
+.placeholder {
+  height: 16px;
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+}

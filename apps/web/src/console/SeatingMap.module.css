@@ -1,0 +1,150 @@
+.map {
+  display: flex;
+  flex-direction: column;
+  width: 340px;
+}
+
+.map.collapsed {
+  width: auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--text-md-size);
+  line-height: var(--text-md-line);
+  font-weight: var(--weight-semibold);
+}
+
+.collapsed .header {
+  border-bottom: 0;
+  padding: var(--space-2);
+}
+
+.svg {
+  display: block;
+  width: calc(100% - 2 * var(--space-2));
+  height: auto;
+  margin: var(--space-2);
+}
+
+.stage {
+  fill: var(--color-ink);
+}
+
+.stageLabel {
+  fill: var(--color-surface);
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.section {
+  cursor: pointer;
+  outline: none;
+}
+
+.section polygon {
+  fill: var(--color-bg);
+  stroke: var(--color-border-strong);
+  stroke-width: 1.5;
+  transition: fill var(--motion-fast);
+}
+
+.floor polygon {
+  fill: var(--color-surface);
+}
+
+.section:hover polygon {
+  fill: var(--color-accent-bg);
+}
+
+.label {
+  fill: var(--color-ink);
+  font-size: 30px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.count {
+  fill: var(--color-ink-muted);
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.empty .label,
+.empty .count {
+  fill: var(--color-ink-subtle);
+}
+
+/* Current row: accent outline, thick enough to read without the colour. */
+.section.highlighted polygon {
+  fill: var(--color-accent-bg);
+  stroke: var(--color-accent);
+  stroke-width: 5;
+}
+
+/* Filtering by this section: solid accent, inverted labels. */
+.section.active polygon,
+.section.active:hover polygon {
+  fill: var(--color-accent);
+  stroke: var(--color-accent);
+}
+
+.section.active .label,
+.section.active .count {
+  fill: var(--color-surface);
+}
+
+.active.section.highlighted polygon {
+  stroke: var(--color-ink);
+}
+
+.section:focus-visible polygon {
+  stroke: var(--color-ink);
+  stroke-width: 4;
+  stroke-dasharray: 8 4;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0 var(--space-4) var(--space-3);
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs-size);
+}
+
+.swatchHighlight,
+.swatchActive {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.swatchHighlight {
+  border: 2px solid var(--color-accent);
+  background: var(--color-accent-bg);
+}
+
+.swatchActive {
+  margin-left: var(--space-2);
+  background: var(--color-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section polygon {
+    transition: none;
+  }
+}

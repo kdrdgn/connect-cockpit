@@ -13,7 +13,7 @@ import {
   type SyncEntry,
   parseListQuery,
 } from "@cockpit/contract";
-import { type ChaosConfig, DEFAULT_CHAOS, writeFails } from "./chaos";
+import { CHAOS_OFF, type ChaosConfig, DEFAULT_CHAOS, writeFails } from "./chaos";
 import { generate, startOfDay } from "./generate";
 import { decodeCursor, page } from "./query";
 import { makeRng } from "./rng";
@@ -325,6 +325,26 @@ export function createEngine(options: EngineOptions = {}) {
     }
   }
 
+  // ---- Runtime chaos (demo panel) --------------------------------------------
+
+  let beforeOff: Pick<ChaosConfig, "latency" | "failRate" | "rate429"> | null = null;
+
+  /**
+   * Changes chaos while running, for the demo panel. Read on the next request; listings are untouched.
+   * Turning chaos off remembers the current values, and turning it on again restores them.
+   */
+  function setChaos(patch: Partial<Pick<ChaosConfig, "chaos" | "latency" | "failRate" | "rate429">>) {
+    if (patch.chaos === false && config.chaos) {
+      beforeOff = { latency: config.latency, failRate: config.failRate, rate429: config.rate429 };
+      Object.assign(config, { chaos: false, ...CHAOS_OFF });
+    } else if (patch.chaos === true && !config.chaos) {
+      Object.assign(config, { chaos: true, ...(beforeOff ?? DEFAULT_CHAOS) });
+      beforeOff = null;
+    }
+    const { chaos: _, ...values } = patch;
+    Object.assign(config, values);
+  }
+
   function start(intervalMs = DRIFT_INTERVAL_MS): () => void {
     const timer = setInterval(tick, intervalMs);
     return () => clearInterval(timer);
@@ -335,6 +355,7 @@ export function createEngine(options: EngineOptions = {}) {
     handle,
     tick,
     start,
+    setChaos,
     /** Read-only access for tests and the dev panel. */
     get: (id: string) => listings.get(id),
     all: () => [...listings.values()],

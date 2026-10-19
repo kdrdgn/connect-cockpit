@@ -19,3 +19,13 @@ body {
   outline: 2px solid var(--color-accent);
   outline-offset: 1px;
 }
+
+/* Visually hidden, still read by assistive technology. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

@@ -1,9 +1,5 @@
-import { CheckpointList } from "./CheckpointList";
+import { Console } from "@/console/Console";
 
 export default function Home() {
-  return (
-    <main>
-      <CheckpointList />
-    </main>
-  );
+  return <Console />;
 }

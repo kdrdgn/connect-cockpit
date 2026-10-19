@@ -1,0 +1,27 @@
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm-size);
+  line-height: var(--text-sm-line);
+  font-variant-numeric: var(--font-numeric);
+  white-space: nowrap;
+  min-width: 13ch;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-ink-subtle);
+}
+
+.stalled {
+  color: var(--color-attention);
+  font-weight: var(--weight-medium);
+}
+
+.stalled .dot {
+  background: var(--color-attention);
+}

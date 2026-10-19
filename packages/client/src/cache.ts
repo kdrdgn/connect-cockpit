@@ -1,4 +1,4 @@
-import type { ListQueryInput, Listing, PatchBody } from "@cockpit/contract";
+import type { ListQueryInput, Listing, Marketplace, PatchBody, SyncEntry } from "@cockpit/contract";
 import type { MutationOptions, QueryClient } from "@tanstack/react-query";
 import { ApiError, type Client } from "./client";
 
@@ -6,13 +6,18 @@ import { ApiError, type Client } from "./client";
 export const keys = {
   listings: (filters: ListQueryInput) => ["listings", filters] as const,
   listing: (id: string) => ["listing", id] as const,
+  history: (id: string) => ["history", id] as const,
 };
 
 export type ListingsPage = { ids: string[]; total: number; nextCursor: string | null; changesCursor: string };
 
 export const PATCH_MUTATION_KEY = ["patch-listing"] as const;
 
-export type PatchVariables = { id: string } & Omit<PatchBody, "version">;
+/**
+ * `baseVersion`: the version the edit started from. When set, a change that arrived mid-edit makes the write
+ * fail with CONFLICT instead of silently overwriting it. Defaults to the cached version.
+ */
+export type PatchVariables = { id: string; baseVersion?: number } & Omit<PatchBody, "version">;
 export type PatchContext = { id: string; before: Pick<Listing, "price" | "quantity"> } | undefined;
 
 /** True while a write for this listing is in flight; incoming data must not undo its optimistic value. */
@@ -63,12 +68,12 @@ export function patchMutationOptions(
 ): MutationOptions<Listing, ApiError, PatchVariables, PatchContext> {
   return {
     mutationKey: PATCH_MUTATION_KEY,
-    mutationFn: async ({ id, ...patch }) => {
+    mutationFn: async ({ id, baseVersion, ...patch }) => {
       const current = qc.getQueryData<Listing>(keys.listing(id));
       if (!current) throw new ApiError({ code: "NOT_FOUND", message: `Listing ${id} is not loaded`, retryable: false }, 0);
-      return client.patchListing(id, { ...patch, version: current.version });
+      return client.patchListing(id, { ...patch, version: baseVersion ?? current.version });
     },
-    onMutate: ({ id, ...patch }) => {
+    onMutate: ({ id, baseVersion: _, ...patch }) => {
       const key = keys.listing(id);
       const current = qc.getQueryData<Listing>(key);
       if (!current) return undefined;
@@ -88,6 +93,39 @@ export function patchMutationOptions(
     },
     onSuccess: (listing) => {
       qc.setQueryData<Listing>(keys.listing(listing.id), listing);
+    },
+  };
+}
+
+export type RetrySyncVariables = { id: string; marketplace: Marketplace };
+export type RetrySyncContext = { id: string; marketplace: Marketplace; before: SyncEntry } | undefined;
+
+/** Retry-sync shows pending at once; a failed retry puts the marketplace back exactly as it was. */
+export function retrySyncMutationOptions(
+  qc: QueryClient,
+  client: Client,
+  now: () => number = Date.now,
+): MutationOptions<Listing, ApiError, RetrySyncVariables, RetrySyncContext> {
+  return {
+    mutationFn: ({ id, marketplace }) => client.retrySync(id, marketplace),
+    onMutate: ({ id, marketplace }) => {
+      const key = keys.listing(id);
+      const current = qc.getQueryData<Listing>(key);
+      if (!current) return undefined;
+      const before = current.sync[marketplace];
+      const pending: SyncEntry = { ...before, state: "pending", lastError: undefined, updatedAt: new Date(now()).toISOString() };
+      qc.setQueryData<Listing>(key, { ...current, sync: { ...current.sync, [marketplace]: pending } });
+      return { id, marketplace, before };
+    },
+    onError: (_error, _vars, context) => {
+      if (!context) return;
+      const key = keys.listing(context.id);
+      const current = qc.getQueryData<Listing>(key);
+      if (current) qc.setQueryData<Listing>(key, { ...current, sync: { ...current.sync, [context.marketplace]: context.before } });
+    },
+    onSuccess: (listing) => {
+      putListing(qc, listing);
+      void qc.invalidateQueries({ queryKey: keys.history(listing.id) });
     },
   };
 }
