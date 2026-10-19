@@ -51,7 +51,7 @@
 
 ## 8. Checkpoint 1 and integration
 
-- [ ] 8.1 Render a plain list of the first 50 listings (event, section, price) from `packages/mock` through `packages/client` in both `apps/web` and `apps/mobile`; verify both show data after the 300–800 ms delay
+- [x] 8.1 Render a plain list of the first 50 listings (event, section, price) from `packages/mock` through `packages/client` in both `apps/web` and `apps/mobile`; verify both show data after the 300–800 ms delay
 - [x] 8.2 Start the README with how to run and the first "What I skipped and why" entry (Go mock service cut; Go done as a pairing session in the demo); verify the run commands work from a fresh clone
 - [x] 8.3 Run `pnpm -r exec tsc --noEmit` and `pnpm test`; verify both pass with zero errors
 
