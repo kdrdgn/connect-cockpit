@@ -186,6 +186,8 @@ EXPO_PUBLIC_SEED=42 pnpm dev:mobile
 
 **What's on the phone.** A problems feed, worst first by the same ranking as the console (mismatch, error, stuck pending, overpriced, then ordinary pending, muted at the bottom). Rows update live, but the order only changes on pull to refresh or when you come back from a listing, so nothing moves under your thumb. A row's Retry fixes it in one tap. The listing screen shows each marketplace's state and full error, Retry sync, Delist (with a native confirmation) and Edit price, a sheet with ±£1 steppers. A failed save rolls back and says why on the listing screen, with Retry. Polling stops in the background and catches up once on return.
 
+**Checked on a phone** (Expo Go, iPhone): the feed, the listing screen, a seeded failed save rolling back with its banner, VoiceOver reading each row as one item with Retry announced separately, and the 20-second script (cold start, top row, Edit price, +£2, Save, back to the feed). <!-- TODO(author): add the timed run (seconds) and the recording link here. -->
+
 **No AI on the phone.** The explanation is web-only by choice: the phone runs without a server, and the manual actions cover the 20-second fix.
 
 **Why Expo, and what wasn't shipped natively:** see [`docs/mobile-adr.md`](docs/mobile-adr.md).
