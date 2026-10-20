@@ -15,6 +15,9 @@ const TINTED: [ColorRole, ColorRole][] = [
   ["ink", "attentionBg"],
   // A far-off price gap on a selected row.
   ["attentionStrong", "accentBg"],
+  // Filled buttons: primary and danger labels use the surface colour.
+  ["surface", "accent"],
+  ["surface", "danger"],
 ];
 
 describe("design tokens", () => {

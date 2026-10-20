@@ -35,3 +35,38 @@ test("a suggested price opens the inline editor filled in, and nothing is sent u
   await expect(row.getByRole("textbox")).toBeFocused();
   expect(patches).toHaveLength(0);
 });
+
+test("the action row keeps its emphasis and order when the explanation arrives, and a retry is not repeated", async ({ page }) => {
+  let release!: () => void;
+  const answered = new Promise<void>((r) => (release = r));
+  await page.context().route("**/api/ai/explain-sync", async (route) => {
+    await answered;
+    await route.fulfill({
+      json: {
+        result: { explanation: "SeatGeek is having an outage; a retry usually clears it.", cause: "marketplace_outage", action: "retry", confidence: "high", flagged: false },
+        meta: { source: "model", cached: false, inputTokens: 400, outputTokens: 50, latencyMs: 900 },
+      },
+    });
+  });
+
+  await page.goto("/?chaos=off&sync=seatgeek:error");
+  await page.locator('tbody tr[data-index="0"]').locator("td").nth(1).click();
+  const seatgeek = page.locator("aside[aria-labelledby=drawer-title]").getByRole("region", { name: "SeatGeek", exact: true });
+  // CSS module class names are hashed but keep the variant name.
+  const row = () =>
+    seatgeek.getByRole("button").evaluateAll((buttons) =>
+      buttons
+        .filter((b) => !b.textContent?.startsWith("Suggested") && b.textContent !== "Try again")
+        .map((b) => `${b.textContent}:${/primary|danger|ghost/.exec(b.className)?.[0] ?? "default"}`),
+    );
+
+  await expect(seatgeek.getByText("Reading the error…")).toBeVisible();
+  const before = await row();
+  expect(before).toEqual(["Retry sync:primary", "Edit price:default", "Delist…:ghost"]);
+
+  release();
+  await expect(seatgeek).toContainText("a retry usually clears it");
+  expect(await row()).toEqual(before);
+  await expect(seatgeek.getByRole("button", { name: "Retry sync" })).toHaveCount(1);
+  await expect(seatgeek.getByRole("button", { name: /^Suggested:/ })).toHaveCount(0);
+});

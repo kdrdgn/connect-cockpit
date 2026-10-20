@@ -84,10 +84,13 @@ export function LastBulkActions({ flow }: { flow: ReturnType<typeof useBulkFlow>
   if (!last) return null;
   const failed = failedCount(last);
   const canUndo = last.kind !== "undo" && succeededCount(last) > 0;
+  // Retrying failed delists removes listings; retrying a failed undo of a delist sends relists, which remove nothing.
+  const failedIds = new Set(last.results.flatMap((r) => (r.ok ? [] : [r.id])));
+  const retryVariant = last.ops.some((o) => o.op === "delist" && failedIds.has(o.id)) ? "danger" : "primary";
   return (
     <>
       {failed > 0 && (
-        <Button onClick={() => void flow.retryFailed()} disabled={busy}>
+        <Button variant={retryVariant} onClick={() => void flow.retryFailed()} disabled={busy}>
           Retry failed ({failed})
         </Button>
       )}
@@ -115,7 +118,7 @@ export function BulkDialog({ flow }: { flow: ReturnType<typeof useBulkFlow> }) {
         footer={
           <>
             <Button onClick={flow.close}>Cancel</Button>
-            <Button variant="primary" onClick={() => void flow.apply()} disabled={count === 0} autoFocus>
+            <Button variant={bulk.intent.kind === "delist" ? "danger" : "primary"} onClick={() => void flow.apply()} disabled={count === 0} autoFocus>
               {count === 0 ? "Nothing to change" : `Apply to ${count} listing${count === 1 ? "" : "s"}`}
             </Button>
           </>
@@ -146,7 +149,8 @@ export function BulkDialog({ flow }: { flow: ReturnType<typeof useBulkFlow> }) {
         footer={
           <>
             <LastBulkActions flow={flow} />
-            <Button variant="primary" onClick={flow.close} autoFocus>
+            {/* Focus stays on Close either way, so Enter on a result never sends another write. */}
+            <Button variant={failures.length ? "default" : "primary"} onClick={flow.close} autoFocus>
               Close
             </Button>
           </>

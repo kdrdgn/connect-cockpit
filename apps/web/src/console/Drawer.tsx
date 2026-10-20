@@ -147,26 +147,22 @@ function MarketplaceSection({
         <ExplainPanel
           listing={listing}
           marketplace={marketplace}
-          onRetry={doRetry}
           onEditPrice={editPrice}
           onDelist={() => setConfirmDelist(true)}
         />
       )}
       <div className={styles.actions}>
+        {/* One filled button per section: the delist confirm takes over from Retry while it is open. */}
         {canRetry && (
-          <Button onClick={doRetry} disabled={retry.isPending}>
+          <Button variant={confirmDelist ? "default" : "primary"} onClick={doRetry} disabled={retry.isPending}>
             {retry.isPending ? "Retrying…" : "Retry sync"}
           </Button>
         )}
-        {entry.state === "error" && (
-          <Button variant="ghost" onClick={() => editPrice(String(listing.price))}>
-            Edit price
-          </Button>
-        )}
+        {entry.state === "error" && <Button onClick={() => editPrice(String(listing.price))}>Edit price</Button>}
         {listed &&
           (confirmDelist ? (
             <>
-              <Button variant="primary" onClick={() => void doDelist()} autoFocus>
+              <Button variant="danger" onClick={() => void doDelist()} autoFocus>
                 Confirm delist from {name}
               </Button>
               <Button variant="ghost" onClick={() => setConfirmDelist(false)}>

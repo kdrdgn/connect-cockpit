@@ -1,7 +1,8 @@
 import type { ComponentPropsWithRef } from "react";
 import styles from "./Button.module.css";
 
-type Variant = "default" | "primary" | "ghost";
+/** primary: the recommended next step. danger: confirms removing something. default: an alternative. ghost: an escape or the start of a flow. */
+type Variant = "default" | "primary" | "danger" | "ghost";
 
 export type ButtonProps = ComponentPropsWithRef<"button"> & { variant?: Variant };
 

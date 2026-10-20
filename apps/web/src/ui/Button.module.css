@@ -32,6 +32,18 @@
   filter: brightness(1.1);
 }
 
+/* Filled like primary, so the commit reads the same; the colour says it removes something. */
+.danger {
+  border-color: var(--color-danger);
+  background: var(--color-danger);
+  color: var(--color-surface);
+}
+
+.danger:hover:not(:disabled) {
+  background: var(--color-danger);
+  filter: brightness(1.1);
+}
+
 .ghost {
   border-color: transparent;
   background: transparent;

@@ -90,3 +90,32 @@ test("edit a price, bulk -10% on 40 rows, retry the predicted failures, then und
     await expect(priceCell).toHaveText("£321"); // back to the edited price, not the generated one
   }
 });
+
+test("a bulk delist confirms in danger, and Enter on a result with failures closes it without another write", async ({ page }) => {
+  let bulkCalls = 0;
+  page.on("request", (r) => r.url().endsWith("/api/listings/bulk") && bulkCalls++);
+  await page.goto(`/?seed=${SEED}&rate429=0&latency=0-50&failRate=${FAIL_RATE}`);
+  await page.locator("tbody tr[data-id]").first().waitFor();
+  await page.locator('tbody tr[data-index="0"] input[type=checkbox]').click();
+  await page.locator('tbody tr[data-index="19"] input[type=checkbox]').click({ modifiers: ["Shift"] });
+  await page.getByLabel("Delist from").selectOption("stubhub");
+  await page.getByRole("button", { name: "Preview delist" }).click();
+
+  // CSS module class names are hashed but keep the variant name.
+  const dialog = page.getByRole("dialog");
+  const apply = dialog.getByRole("button", { name: /^Apply to/ });
+  await expect(apply).toHaveClass(/danger/);
+  await apply.click();
+
+  await expect(dialog.getByRole("heading")).toHaveText(/failed/);
+  await expect(dialog.getByRole("button", { name: /^Retry failed/ })).toHaveClass(/danger/);
+  const close = dialog.getByRole("button", { name: "Close", exact: true });
+  await expect(close).toBeFocused();
+  await expect(close).not.toHaveClass(/primary|danger/);
+
+  await page.keyboard.press("Enter");
+  await expect(dialog).toBeHidden();
+  expect(bulkCalls).toBe(1);
+  // The bar repeats Retry failed with the same emphasis.
+  await expect(page.getByRole("region", { name: "Bulk actions" }).getByRole("button", { name: /^Retry failed/ })).toHaveClass(/danger/);
+});

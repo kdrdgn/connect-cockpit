@@ -1,8 +1,9 @@
 import { keys } from "@cockpit/client";
 import type { ExplainResult, Listing } from "@cockpit/contract";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
+import buttonStyles from "@/ui/Button.module.css";
 import { useToasts } from "@/ui/Toast";
 import { Drawer } from "./Drawer";
 import { EditCell } from "./EditCell";
@@ -25,7 +26,11 @@ async function setup(explain: (body: unknown) => Promise<Response>) {
     ...base,
     price: 90,
     marketPrice: 120,
-    sync: { ...base.sync, seatgeek: { state: "error", updatedAt: base.date, lastError: ERROR } },
+    sync: {
+      ...base.sync,
+      stubhub: { state: "live", updatedAt: base.date, listedQuantity: base.quantity },
+      seatgeek: { state: "error", updatedAt: base.date, lastError: ERROR },
+    },
   };
   h.qc.setQueryData(keys.listing(listing.id), listing);
   render(
@@ -95,5 +100,62 @@ describe("ExplainPanel", () => {
     expect(await screen.findByText("Mock AI")).toBeTruthy();
     expect(screen.getByText("No action suggested.")).toBeTruthy();
     expect(screen.getByText("Low confidence")).toBeTruthy();
+  });
+});
+
+describe("drawer action emphasis", () => {
+  const variantOf = (button: HTMLElement) =>
+    (["primary", "danger", "ghost"] as const).find((v) => button.classList.contains(buttonStyles[v] ?? "")) ?? "default";
+  const section = (name: string) => within(screen.getByRole("region", { name }));
+  const actions = (name: string) =>
+    section(name)
+      .getAllByRole("button")
+      .filter((b) => !b.textContent?.startsWith("Suggested") && b.textContent !== "Try again")
+      .map((b) => [b.textContent, variantOf(b)]);
+
+  it("an errored marketplace leads with Retry sync, then Edit price, then a quiet Delist…", async () => {
+    await setup(() => new Promise(() => {}));
+    expect(actions("SeatGeek")).toEqual([
+      ["Retry sync", "primary"],
+      ["Edit price", "default"],
+      ["Delist…", "ghost"],
+    ]);
+  });
+
+  it("keeps the same emphasis and order once the explanation arrives", async () => {
+    await setup(answer({ floor: 96 }));
+    await screen.findByRole("button", { name: "Suggested: Adjust price to £114" });
+    expect(variantOf(screen.getByRole("button", { name: "Suggested: Adjust price to £114" }))).toBe("default");
+    expect(actions("SeatGeek")).toEqual([
+      ["Retry sync", "primary"],
+      ["Edit price", "default"],
+      ["Delist…", "ghost"],
+    ]);
+  });
+
+  it("confirming a delist is danger and takes over from Retry sync", async () => {
+    const { user } = await setup(() => new Promise(() => {}));
+    await user.click(section("SeatGeek").getByRole("button", { name: "Delist…" }));
+    const confirm = section("SeatGeek").getByRole("button", { name: "Confirm delist from SeatGeek" });
+    expect(document.activeElement).toBe(confirm);
+    expect(actions("SeatGeek")).toEqual([
+      ["Retry sync", "default"],
+      ["Edit price", "default"],
+      ["Confirm delist from SeatGeek", "danger"],
+      ["Keep listed", "ghost"],
+    ]);
+  });
+
+  it("a live marketplace has no filled button", async () => {
+    await setup(() => new Promise(() => {}));
+    expect(actions("StubHub")).toEqual([["Delist…", "ghost"]]);
+  });
+
+  it("a retry suggestion is not repeated: one Retry sync, explanation still shown", async () => {
+    await setup(answer({ cause: "marketplace_outage", action: "retry" }));
+    expect(await screen.findByText("Suggested: use Retry sync below.")).toBeTruthy();
+    expect(screen.getByText("SeatGeek has a minimum price for this event.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /^Suggested:/ })).toBeNull();
+    expect(section("SeatGeek").getAllByRole("button", { name: "Retry sync" })).toHaveLength(1);
   });
 });

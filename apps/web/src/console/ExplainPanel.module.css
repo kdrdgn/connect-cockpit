@@ -22,7 +22,7 @@
   background: var(--color-surface);
 }
 
-/* The error text looked like instructions: attention, never danger (danger is reserved for rollbacks). */
+/* The error text looked like instructions: attention, never danger (danger is reserved for system rollbacks and confirming a removal). */
 .flagged {
   border-color: var(--color-attention);
 }

@@ -16,7 +16,6 @@ const CAUSE_WORD: Record<ExplainCause, string> = {
 };
 
 export type ExplainHandlers = {
-  onRetry: () => void;
   /** Opens the inline price editor filled with `initial`; nothing is sent until the broker confirms. */
   onEditPrice: (initial: string) => void;
   /** Opens the existing two-step delist confirmation. */
@@ -54,7 +53,6 @@ function Explanation({
   listing,
   marketplace,
   mock,
-  onRetry,
   onEditPrice,
   onDelist,
 }: { result: ExplainResult; listing: Listing; marketplace: Marketplace; mock: boolean } & ExplainHandlers) {
@@ -67,12 +65,14 @@ function Explanation({
         {result.confidence === "low" && <span>Low confidence</span>}
       </p>
       <p className={styles.text}>{result.explanation}</p>
-      {suggestion ? (
+      {/* A retry suggestion points at the section's own Retry sync rather than repeating it. */}
+      {suggestion?.action === "retry" ? (
+        <p className={styles.none}>Suggested: use Retry sync below.</p>
+      ) : suggestion ? (
         <Button
           onClick={() => {
             if (suggestion.action === "adjust_price") onEditPrice(String(suggestion.price));
-            else if (suggestion.action === "delist") onDelist();
-            else onRetry();
+            else onDelist();
           }}
         >
           Suggested: {suggestion.label}
